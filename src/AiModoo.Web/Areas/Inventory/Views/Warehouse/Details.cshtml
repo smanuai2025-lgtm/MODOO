@@ -1,0 +1,67 @@
+@model Warehouse
+@{
+    ViewData["Title"] = Model.Name;
+    var isRtl = CultureInfo.CurrentCulture.TextInfo.IsRightToLeft;
+}
+
+<div class="space-y-6">
+    @if (TempData["Success"] != null)
+    {
+        <div class="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg">@TempData["Success"]</div>
+    }
+
+    <div class="flex justify-between items-center">
+        <div class="flex items-center gap-4">
+            <a href="/Inventory/Warehouse" class="text-slate-400 hover:text-slate-600"><i class="fas fa-arrow-left"></i></a>
+            <div>
+                <h1 class="text-2xl font-bold text-slate-800">@(isRtl && !string.IsNullOrEmpty(Model.NameAr) ? Model.NameAr : Model.Name)</h1>
+                <p class="text-slate-500 font-mono">@Model.Code</p>
+            </div>
+        </div>
+        <a href="/Inventory/Warehouse/Edit/@Model.Id" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm">
+            <i class="fas fa-edit"></i> @(isRtl ? "تعديل" : "Edit")
+        </a>
+    </div>
+
+    <div class="bg-white rounded-xl shadow-sm border p-6">
+        <h2 class="text-lg font-semibold mb-4 border-b pb-2">@(isRtl ? "المعلومات" : "Information")</h2>
+        <div class="grid grid-cols-2 gap-4">
+            <div><span class="text-slate-500">@(isRtl ? "العنوان" : "Address"):</span> <span class="font-medium">@(Model.Address ?? "-")</span></div>
+            <div><span class="text-slate-500">@(isRtl ? "الحالة" : "Status"):</span>
+                <span class="px-2 py-0.5 rounded-full text-xs @(Model.IsActive ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700")">
+                    @(Model.IsActive ? (isRtl ? "نشط" : "Active") : (isRtl ? "غير نشط" : "Inactive"))
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-xl shadow-sm border p-6">
+        <h2 class="text-lg font-semibold mb-4 border-b pb-2">@(isRtl ? "المواقع" : "Locations") (@(Model.Locations?.Count ?? 0))</h2>
+        <table class="w-full text-sm">
+            <thead class="bg-slate-50">
+                <tr>
+                    <th class="px-4 py-2 text-start">@(isRtl ? "الاسم" : "Name")</th>
+                    <th class="px-4 py-2 text-start">@(isRtl ? "النوع" : "Type")</th>
+                    <th class="px-4 py-2 text-center">@(isRtl ? "الحالة" : "Status")</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y">
+                @if (Model.Locations != null)
+                {
+                    @foreach (var loc in Model.Locations)
+                    {
+                        <tr>
+                            <td class="px-4 py-2 font-medium">@loc.CompleteName</td>
+                            <td class="px-4 py-2">@loc.LocationType</td>
+                            <td class="px-4 py-2 text-center">
+                                <span class="px-2 py-0.5 rounded-full text-xs @(loc.IsActive ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700")">
+                                    @(loc.IsActive ? (isRtl ? "نشط" : "Active") : (isRtl ? "غير نشط" : "Inactive"))
+                                </span>
+                            </td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

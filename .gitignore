@@ -1,0 +1,53 @@
+## .NET
+bin/
+obj/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+.vs/
+*.csproj.user
+
+## NuGet
+**/[Pp]ackages/*
+!**/[Pp]ackages/build/
+*.nupkg
+**/[Pp]roject.lock.json
+**/[Pp]roject.fragment.lock.json
+
+## Node
+node_modules/
+
+## Build results
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+
+## User-specific files
+*.rsuser
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+## Rider
+.idea/
+
+## VS Code
+.vscode/
+
+## Environment
+appsettings.Development.json
+*.env
+
+## ML Models
+wwwroot/ml-models/
+
+## Redis
+dump.rdb
+
+## OS
+.DS_Store
+Thumbs.db
+publish/

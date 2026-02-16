@@ -1,0 +1,39 @@
+@model IEnumerable<AccountDto>
+
+@{
+    ViewData["Title"] = "شجرة الحسابات | Accounts Tree";
+    var isRtl = System.Globalization.CultureInfo.CurrentCulture.Name.StartsWith("ar");
+}
+
+<div class="flex items-center justify-between mb-6">
+    <div>
+        <h1 class="text-2xl font-bold text-gray-800">@(isRtl ? "شجرة الحسابات" : "Accounts Tree")</h1>
+    </div>
+    <div class="flex gap-2">
+        <a asp-action="Index" class="bg-gray-100 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-200 transition">
+            <i class="fas fa-list me-1"></i> @(isRtl ? "عرض جدول" : "List View")
+        </a>
+        <a asp-action="Create" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition">
+            <i class="fas fa-plus me-1"></i> @(isRtl ? "حساب جديد" : "New Account")
+        </a>
+    </div>
+</div>
+
+<div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+    @if (Model != null && Model.Any())
+    {
+        <ul class="space-y-1" id="accountTree">
+            @foreach (var account in Model)
+            {
+                await Html.RenderPartialAsync("_AccountTreeNode", account);
+            }
+        </ul>
+    }
+    else
+    {
+        <div class="text-center py-12 text-gray-500">
+            <i class="fas fa-folder-open text-4xl mb-3"></i>
+            <p>@(isRtl ? "لا توجد حسابات" : "No accounts found")</p>
+        </div>
+    }
+</div>

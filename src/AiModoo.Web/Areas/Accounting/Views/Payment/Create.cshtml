@@ -1,0 +1,65 @@
+@model Payment
+
+@{
+    ViewData["Title"] = Model.PaymentType == PaymentType.Inbound ? "استلام دفعة | Receive Payment" : "صرف دفعة | Send Payment";
+    var isRtl = System.Globalization.CultureInfo.CurrentCulture.Name.StartsWith("ar");
+}
+
+<div class="max-w-2xl mx-auto">
+    <div class="flex items-center mb-6">
+        <a asp-action="Index" class="text-gray-500 hover:text-gray-700 me-3"><i class="fas fa-arrow-left"></i></a>
+        <h1 class="text-2xl font-bold text-gray-800">@ViewData["Title"]</h1>
+    </div>
+
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+        <form asp-action="Create" method="post">
+            <div asp-validation-summary="All" class="text-red-500 text-sm mb-4"></div>
+            <input type="hidden" asp-for="PaymentType" />
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">@(isRtl ? "التاريخ" : "Date") *</label>
+                    <input asp-for="Date" type="date" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" required />
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">@(isRtl ? "المبلغ" : "Amount") *</label>
+                    <input asp-for="Amount" type="number" step="0.01" min="0.01" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" required />
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">@(isRtl ? "اليومية" : "Journal") *</label>
+                    <select asp-for="JournalId" asp-items="ViewBag.Journals" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" required>
+                        <option value="">@(isRtl ? "اختر" : "Select")</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">@(isRtl ? "طريقة الدفع" : "Payment Method") *</label>
+                    <select asp-for="PaymentMethodId" asp-items="ViewBag.PaymentMethods" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" required>
+                        <option value="">@(isRtl ? "اختر" : "Select")</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-1">@(isRtl ? "العملة" : "Currency")</label>
+                <select asp-for="CurrencyId" asp-items="ViewBag.Currencies" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                    <option value="">@(isRtl ? "العملة الافتراضية" : "Default Currency")</option>
+                </select>
+            </div>
+
+            <div class="mb-6">
+                <label class="block text-sm font-medium text-gray-700 mb-1">@(isRtl ? "ملاحظات" : "Memo")</label>
+                <textarea asp-for="Memo" rows="2" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"></textarea>
+            </div>
+
+            <div class="flex justify-end gap-3">
+                <a asp-action="Index" class="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">@(isRtl ? "إلغاء" : "Cancel")</a>
+                <button type="submit" class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
+                    <i class="fas fa-save me-1"></i> @(isRtl ? "حفظ" : "Save")
+                </button>
+            </div>
+        </form>
+    </div>
+</div>

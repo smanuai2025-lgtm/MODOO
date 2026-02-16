@@ -1,0 +1,38 @@
+@model Tax
+
+@{
+    ViewData["Title"] = "ضريبة جديدة | New Tax";
+    var isRtl = System.Globalization.CultureInfo.CurrentCulture.Name.StartsWith("ar");
+}
+
+<div class="max-w-xl mx-auto">
+    <div class="flex items-center mb-6">
+        <a asp-action="Index" class="text-gray-500 hover:text-gray-700 me-3"><i class="fas fa-arrow-left"></i></a>
+        <h1 class="text-2xl font-bold text-gray-800">@(isRtl ? "ضريبة جديدة" : "New Tax")</h1>
+    </div>
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+        <form asp-action="Create" method="post">
+            <div asp-validation-summary="All" class="text-red-500 text-sm mb-4"></div>
+            <div class="grid grid-cols-2 gap-4 mb-4">
+                <div><label class="block text-sm font-medium text-gray-700 mb-1">@(isRtl ? "الاسم" : "Name") *</label><input asp-for="Name" class="w-full px-3 py-2 border border-gray-300 rounded-lg" required /></div>
+                <div><label class="block text-sm font-medium text-gray-700 mb-1">@(isRtl ? "الاسم بالعربي" : "Arabic Name")</label><input asp-for="NameAr" class="w-full px-3 py-2 border border-gray-300 rounded-lg" dir="rtl" /></div>
+            </div>
+            <div class="grid grid-cols-2 gap-4 mb-4">
+                <div><label class="block text-sm font-medium text-gray-700 mb-1">@(isRtl ? "النوع" : "Type")</label><select asp-for="Type" asp-items="ViewBag.TaxTypes" class="w-full px-3 py-2 border border-gray-300 rounded-lg"></select></div>
+                <div><label class="block text-sm font-medium text-gray-700 mb-1">@(isRtl ? "النسبة/المبلغ" : "Rate/Amount")</label><input asp-for="Rate" type="number" step="0.01" class="w-full px-3 py-2 border border-gray-300 rounded-lg" /></div>
+            </div>
+            <div class="grid grid-cols-2 gap-4 mb-4">
+                <div><label class="block text-sm font-medium text-gray-700 mb-1">@(isRtl ? "حساب المبيعات" : "Sales Account")</label><select asp-for="SalesAccountId" asp-items="ViewBag.Accounts" class="w-full px-3 py-2 border border-gray-300 rounded-lg"><option value="">-</option></select></div>
+                <div><label class="block text-sm font-medium text-gray-700 mb-1">@(isRtl ? "حساب المشتريات" : "Purchase Account")</label><select asp-for="PurchaseAccountId" asp-items="ViewBag.Accounts" class="w-full px-3 py-2 border border-gray-300 rounded-lg"><option value="">-</option></select></div>
+            </div>
+            <div class="flex items-center gap-6 mb-6">
+                <label class="flex items-center gap-2"><input asp-for="IsActive" type="checkbox" checked class="w-4 h-4" /><span class="text-sm">@(isRtl ? "نشط" : "Active")</span></label>
+                <label class="flex items-center gap-2"><input asp-for="IncludedInPrice" type="checkbox" class="w-4 h-4" /><span class="text-sm">@(isRtl ? "مضمنة في السعر" : "Included in Price")</span></label>
+            </div>
+            <div class="flex justify-end gap-3">
+                <a asp-action="Index" class="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">@(isRtl ? "إلغاء" : "Cancel")</a>
+                <button type="submit" class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"><i class="fas fa-save me-1"></i> @(isRtl ? "حفظ" : "Save")</button>
+            </div>
+        </form>
+    </div>
+</div>

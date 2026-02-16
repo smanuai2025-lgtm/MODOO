@@ -1,0 +1,129 @@
+@model JournalEntry
+
+@{
+    ViewData["Title"] = $"قيد {Model.Number} | Entry {Model.Number}";
+    var isRtl = System.Globalization.CultureInfo.CurrentCulture.Name.StartsWith("ar");
+}
+
+<div class="flex items-center justify-between mb-6">
+    <div class="flex items-center gap-3">
+        <a asp-action="Index" class="text-gray-500 hover:text-gray-700"><i class="fas fa-arrow-left"></i></a>
+        <div>
+            <h1 class="text-2xl font-bold text-gray-800">@Model.Number</h1>
+            <p class="text-gray-500">@Model.Date.ToString("yyyy-MM-dd") | @Model.Journal?.Name</p>
+        </div>
+        <span class="ms-3 inline-flex items-center px-3 py-1 rounded-full text-sm font-medium
+            @(Model.Status == JournalEntryStatus.Draft ? "bg-yellow-100 text-yellow-800" :
+              Model.Status == JournalEntryStatus.Posted ? "bg-green-100 text-green-800" :
+              "bg-red-100 text-red-800")">
+            @Model.Status
+        </span>
+    </div>
+
+    <div class="flex gap-2">
+        @if (Model.Status == JournalEntryStatus.Draft)
+        {
+            <form asp-action="Post" asp-route-id="@Model.Id" method="post" class="inline">
+                <button type="submit" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition">
+                    <i class="fas fa-check me-1"></i> @(isRtl ? "ترحيل" : "Post")
+                </button>
+            </form>
+            <form asp-action="Cancel" asp-route-id="@Model.Id" method="post" class="inline" onsubmit="return confirm('@(isRtl ? "هل أنت متأكد؟" : "Are you sure?")')">
+                <button type="submit" class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition">
+                    <i class="fas fa-times me-1"></i> @(isRtl ? "إلغاء" : "Cancel")
+                </button>
+            </form>
+        }
+        @if (Model.Status == JournalEntryStatus.Posted)
+        {
+            <button onclick="document.getElementById('reverseModal').classList.remove('hidden')" class="bg-orange-500 text-white px-4 py-2 rounded-lg hover:bg-orange-600 transition">
+                <i class="fas fa-undo me-1"></i> @(isRtl ? "عكس" : "Reverse")
+            </button>
+        }
+    </div>
+</div>
+
+<!-- Entry Info -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
+        <p class="text-sm text-gray-500">@(isRtl ? "المرجع" : "Reference")</p>
+        <p class="font-medium text-gray-800">@(Model.Reference ?? "-")</p>
+    </div>
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
+        <p class="text-sm text-gray-500">@(isRtl ? "المصدر" : "Source")</p>
+        <p class="font-medium text-gray-800">@(Model.SourceModule ?? "-") / @(Model.SourceDocument ?? "-")</p>
+    </div>
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
+        <p class="text-sm text-gray-500">@(isRtl ? "الفترة المالية" : "Fiscal Period")</p>
+        <p class="font-medium text-gray-800">@(Model.FiscalPeriod?.Name ?? "-")</p>
+    </div>
+</div>
+
+@if (!string.IsNullOrEmpty(Model.Narration))
+{
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4 mb-6">
+        <p class="text-sm text-gray-500 mb-1">@(isRtl ? "البيان" : "Narration")</p>
+        <p class="text-gray-700">@(isRtl ? Model.NarrationAr ?? Model.Narration : Model.Narration)</p>
+    </div>
+}
+
+<!-- Lines -->
+<div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+    <div class="px-4 py-3 bg-gray-50 border-b border-gray-200">
+        <h2 class="font-semibold text-gray-700">@(isRtl ? "بنود القيد" : "Entry Lines")</h2>
+    </div>
+    <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+            <thead class="bg-gray-50 text-gray-600">
+                <tr>
+                    <th class="px-4 py-3 text-start">#</th>
+                    <th class="px-4 py-3 text-start">@(isRtl ? "الحساب" : "Account")</th>
+                    <th class="px-4 py-3 text-start">@(isRtl ? "الوصف" : "Label")</th>
+                    <th class="px-4 py-3 text-end">@(isRtl ? "مدين" : "Debit")</th>
+                    <th class="px-4 py-3 text-end">@(isRtl ? "دائن" : "Credit")</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100">
+                @{ int lineNum = 1; }
+                @foreach (var line in Model.Lines)
+                {
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-4 py-3 text-gray-500">@lineNum</td>
+                        <td class="px-4 py-3">
+                            <span class="font-mono text-blue-600 text-xs">@line.Account?.Code</span>
+                            <span class="text-gray-700 ms-1">@line.Account?.Name</span>
+                        </td>
+                        <td class="px-4 py-3 text-gray-600">@line.Label</td>
+                        <td class="px-4 py-3 text-end font-mono @(line.Debit > 0 ? "text-green-700 font-medium" : "text-gray-400")">@line.Debit.ToString("N2")</td>
+                        <td class="px-4 py-3 text-end font-mono @(line.Credit > 0 ? "text-red-700 font-medium" : "text-gray-400")">@line.Credit.ToString("N2")</td>
+                    </tr>
+                    lineNum++;
+                }
+            </tbody>
+            <tfoot class="bg-gray-50 font-bold">
+                <tr>
+                    <td colspan="3" class="px-4 py-3 text-end">@(isRtl ? "الإجمالي" : "Total")</td>
+                    <td class="px-4 py-3 text-end font-mono text-green-700">@Model.TotalDebit.ToString("N2")</td>
+                    <td class="px-4 py-3 text-end font-mono text-red-700">@Model.TotalCredit.ToString("N2")</td>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+</div>
+
+<!-- Reverse Modal -->
+<div id="reverseModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div class="bg-white rounded-xl p-6 w-full max-w-md mx-4">
+        <h3 class="text-lg font-bold text-gray-800 mb-4">@(isRtl ? "عكس القيد" : "Reverse Entry")</h3>
+        <form asp-action="Reverse" asp-route-id="@Model.Id" method="post">
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-1">@(isRtl ? "السبب" : "Reason")</label>
+                <textarea name="reason" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" required></textarea>
+            </div>
+            <div class="flex justify-end gap-3">
+                <button type="button" onclick="document.getElementById('reverseModal').classList.add('hidden')" class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">@(isRtl ? "إلغاء" : "Cancel")</button>
+                <button type="submit" class="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600">@(isRtl ? "عكس القيد" : "Reverse")</button>
+            </div>
+        </form>
+    </div>
+</div>

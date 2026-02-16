@@ -1,0 +1,79 @@
+@model IEnumerable<JournalEntry>
+
+@{
+    ViewData["Title"] = "القيود المحاسبية | Journal Entries";
+    var isRtl = System.Globalization.CultureInfo.CurrentCulture.Name.StartsWith("ar");
+}
+
+<div class="flex items-center justify-between mb-6">
+    <div>
+        <h1 class="text-2xl font-bold text-gray-800">@(isRtl ? "القيود المحاسبية" : "Journal Entries")</h1>
+        <p class="text-gray-500 mt-1">@(isRtl ? "عرض وإدارة القيود اليومية" : "View and manage journal entries")</p>
+    </div>
+    <a asp-action="Create" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition">
+        <i class="fas fa-plus me-1"></i> @(isRtl ? "قيد جديد" : "New Entry")
+    </a>
+</div>
+
+<!-- Status Filters -->
+<div class="flex gap-2 mb-4">
+    <a asp-action="Index" class="px-3 py-1.5 rounded-lg text-sm @(ViewBag.CurrentStatus == null ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-700 hover:bg-gray-200")">
+        @(isRtl ? "الكل" : "All")
+    </a>
+    <a asp-action="Index" asp-route-status="@JournalEntryStatus.Draft" class="px-3 py-1.5 rounded-lg text-sm @(ViewBag.CurrentStatus?.ToString() == "Draft" ? "bg-yellow-500 text-white" : "bg-gray-100 text-gray-700 hover:bg-gray-200")">
+        @(isRtl ? "مسودة" : "Draft")
+    </a>
+    <a asp-action="Index" asp-route-status="@JournalEntryStatus.Posted" class="px-3 py-1.5 rounded-lg text-sm @(ViewBag.CurrentStatus?.ToString() == "Posted" ? "bg-green-600 text-white" : "bg-gray-100 text-gray-700 hover:bg-gray-200")">
+        @(isRtl ? "مرحّل" : "Posted")
+    </a>
+    <a asp-action="Index" asp-route-status="@JournalEntryStatus.Cancelled" class="px-3 py-1.5 rounded-lg text-sm @(ViewBag.CurrentStatus?.ToString() == "Cancelled" ? "bg-red-500 text-white" : "bg-gray-100 text-gray-700 hover:bg-gray-200")">
+        @(isRtl ? "ملغى" : "Cancelled")
+    </a>
+</div>
+
+<div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+    <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+            <thead class="bg-gray-50 text-gray-600">
+                <tr>
+                    <th class="px-4 py-3 text-start">@(isRtl ? "الرقم" : "Number")</th>
+                    <th class="px-4 py-3 text-start">@(isRtl ? "التاريخ" : "Date")</th>
+                    <th class="px-4 py-3 text-start">@(isRtl ? "المرجع" : "Reference")</th>
+                    <th class="px-4 py-3 text-start">@(isRtl ? "البيان" : "Narration")</th>
+                    <th class="px-4 py-3 text-end">@(isRtl ? "مدين" : "Debit")</th>
+                    <th class="px-4 py-3 text-end">@(isRtl ? "دائن" : "Credit")</th>
+                    <th class="px-4 py-3 text-center">@(isRtl ? "الحالة" : "Status")</th>
+                    <th class="px-4 py-3 text-center">@(isRtl ? "الإجراءات" : "Actions")</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100">
+                @foreach (var entry in Model.OrderByDescending(e => e.Date))
+                {
+                    <tr class="hover:bg-gray-50 transition">
+                        <td class="px-4 py-3">
+                            <a asp-action="Details" asp-route-id="@entry.Id" class="text-blue-600 hover:underline font-medium">@entry.Number</a>
+                        </td>
+                        <td class="px-4 py-3 text-gray-600">@entry.Date.ToString("yyyy-MM-dd")</td>
+                        <td class="px-4 py-3 text-gray-600">@entry.Reference</td>
+                        <td class="px-4 py-3 text-gray-700">@(isRtl ? entry.NarrationAr ?? entry.Narration : entry.Narration)</td>
+                        <td class="px-4 py-3 text-end font-mono text-gray-700">@entry.TotalDebit.ToString("N2")</td>
+                        <td class="px-4 py-3 text-end font-mono text-gray-700">@entry.TotalCredit.ToString("N2")</td>
+                        <td class="px-4 py-3 text-center">
+                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium
+                                @(entry.Status == JournalEntryStatus.Draft ? "bg-yellow-100 text-yellow-800" :
+                                  entry.Status == JournalEntryStatus.Posted ? "bg-green-100 text-green-800" :
+                                  "bg-red-100 text-red-800")">
+                                @entry.Status
+                            </span>
+                        </td>
+                        <td class="px-4 py-3 text-center">
+                            <a asp-action="Details" asp-route-id="@entry.Id" class="text-blue-600 hover:text-blue-800" title="@(isRtl ? "عرض" : "View")">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

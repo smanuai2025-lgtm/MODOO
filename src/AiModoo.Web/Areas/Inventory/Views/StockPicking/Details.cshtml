@@ -1,0 +1,136 @@
+@model StockPicking
+@{
+    ViewData["Title"] = Model.Name;
+    var isRtl = CultureInfo.CurrentCulture.TextInfo.IsRightToLeft;
+    var statusColor = Model.Status switch { StockPickingStatus.Done => "green", StockPickingStatus.Cancelled => "red", StockPickingStatus.Ready => "blue", _ => "yellow" };
+    var statusText = Model.Status switch { StockPickingStatus.Draft => isRtl ? "مسودة" : "Draft", StockPickingStatus.Ready => isRtl ? "جاهز" : "Ready", StockPickingStatus.Done => isRtl ? "تم" : "Done", StockPickingStatus.Cancelled => isRtl ? "ملغي" : "Cancelled", _ => Model.Status.ToString() };
+}
+
+<div class="space-y-6">
+    @if (TempData["Success"] != null)
+    {
+        <div class="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg">@TempData["Success"]</div>
+    }
+    @if (TempData["Error"] != null)
+    {
+        <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">@TempData["Error"]</div>
+    }
+
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div class="flex items-center gap-4">
+            <a href="/Inventory/StockPicking" class="text-slate-400 hover:text-slate-600"><i class="fas fa-arrow-left"></i></a>
+            <div>
+                <div class="flex items-center gap-3">
+                    <h1 class="text-2xl font-bold text-slate-800">@Model.Name</h1>
+                    <span class="px-3 py-1 rounded-full text-sm bg-@(statusColor)-100 text-@(statusColor)-700">@statusText</span>
+                </div>
+                <p class="text-slate-500">@Model.PickingType?.Name @(Model.SourceDocument != null ? $"| {Model.SourceDocument}" : "")</p>
+            </div>
+        </div>
+        <div class="flex gap-2">
+            @if (Model.Status == StockPickingStatus.Draft)
+            {
+                <form method="post" asp-action="Confirm" asp-route-id="@Model.Id">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm">
+                        <i class="fas fa-check"></i> @(isRtl ? "تأكيد" : "Confirm")
+                    </button>
+                </form>
+            }
+            @if (Model.Status == StockPickingStatus.Draft || Model.Status == StockPickingStatus.Ready)
+            {
+                <form method="post" asp-action="Validate" asp-route-id="@Model.Id">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm">
+                        <i class="fas fa-check-double"></i> @(isRtl ? "تنفيذ" : "Validate")
+                    </button>
+                </form>
+                <form method="post" asp-action="Cancel" asp-route-id="@Model.Id">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="bg-red-100 hover:bg-red-200 text-red-700 px-4 py-2 rounded-lg text-sm">
+                        <i class="fas fa-times"></i> @(isRtl ? "إلغاء" : "Cancel")
+                    </button>
+                </form>
+            }
+        </div>
+    </div>
+
+    <!-- Info -->
+    <div class="bg-white rounded-xl shadow-sm border p-6">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+            <div>
+                <span class="text-slate-500">@(isRtl ? "نوع العملية" : "Operation Type")</span>
+                <p class="font-medium">@Model.PickingType?.Name</p>
+            </div>
+            <div>
+                <span class="text-slate-500">@(isRtl ? "الشريك" : "Partner")</span>
+                <p class="font-medium">@(Model.PartnerName ?? "-")</p>
+            </div>
+            <div>
+                <span class="text-slate-500">@(isRtl ? "التاريخ المجدول" : "Scheduled Date")</span>
+                <p class="font-medium">@Model.ScheduledDate.ToString("yyyy-MM-dd")</p>
+            </div>
+            <div>
+                <span class="text-slate-500">@(isRtl ? "من" : "Source")</span>
+                <p class="font-medium">@Model.SourceLocation?.CompleteName</p>
+            </div>
+            <div>
+                <span class="text-slate-500">@(isRtl ? "إلى" : "Destination")</span>
+                <p class="font-medium">@Model.DestLocation?.CompleteName</p>
+            </div>
+            @if (Model.DoneDate.HasValue)
+            {
+                <div>
+                    <span class="text-slate-500">@(isRtl ? "تاريخ التنفيذ" : "Done Date")</span>
+                    <p class="font-medium">@Model.DoneDate.Value.ToString("yyyy-MM-dd HH:mm")</p>
+                </div>
+            }
+        </div>
+    </div>
+
+    <!-- Moves -->
+    <div class="bg-white rounded-xl shadow-sm border p-6">
+        <h2 class="text-lg font-semibold mb-4 border-b pb-2">@(isRtl ? "حركات المخزون" : "Stock Moves") (@Model.Moves.Count)</h2>
+        <table class="w-full text-sm">
+            <thead class="bg-slate-50">
+                <tr>
+                    <th class="px-4 py-2 text-start">@(isRtl ? "المنتج" : "Product")</th>
+                    <th class="px-4 py-2 text-end">@(isRtl ? "الكمية" : "Quantity")</th>
+                    <th class="px-4 py-2 text-start">@(isRtl ? "الوحدة" : "UoM")</th>
+                    <th class="px-4 py-2 text-end">@(isRtl ? "تكلفة الوحدة" : "Unit Cost")</th>
+                    <th class="px-4 py-2 text-end">@(isRtl ? "الإجمالي" : "Total Cost")</th>
+                    <th class="px-4 py-2 text-center">@(isRtl ? "الحالة" : "Status")</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y">
+                @foreach (var move in Model.Moves)
+                {
+                    <tr>
+                        <td class="px-4 py-2">
+                            <a href="/Inventory/Product/Details/@move.ProductId" class="text-purple-600 hover:underline">
+                                @(isRtl && !string.IsNullOrEmpty(move.Product?.NameAr) ? move.Product.NameAr : move.Product?.Name)
+                            </a>
+                        </td>
+                        <td class="px-4 py-2 text-end font-medium">@move.ProductUomQty.ToString("N2")</td>
+                        <td class="px-4 py-2">@(move.Product?.Uom?.Name ?? "-")</td>
+                        <td class="px-4 py-2 text-end">@move.UnitCost.ToString("N2")</td>
+                        <td class="px-4 py-2 text-end font-medium">@move.TotalCost.ToString("N2")</td>
+                        <td class="px-4 py-2 text-center">
+                            @{
+                                var mStatusColor = move.Status switch { StockMoveStatus.Done => "green", StockMoveStatus.Cancelled => "red", StockMoveStatus.Ready => "blue", _ => "yellow" };
+                            }
+                            <span class="px-2 py-0.5 rounded-full text-xs bg-@(mStatusColor)-100 text-@(mStatusColor)-700">@move.Status</span>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+            <tfoot class="bg-slate-50 font-semibold">
+                <tr>
+                    <td class="px-4 py-2" colspan="4">@(isRtl ? "الإجمالي" : "Total")</td>
+                    <td class="px-4 py-2 text-end">@Model.Moves.Sum(m => m.TotalCost).ToString("N2")</td>
+                    <td></td>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+</div>

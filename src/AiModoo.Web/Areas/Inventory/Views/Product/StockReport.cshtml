@@ -1,0 +1,79 @@
+@model IReadOnlyList<StockReportDto>
+@{
+    ViewData["Title"] = "Stock Report";
+    var isRtl = CultureInfo.CurrentCulture.TextInfo.IsRightToLeft;
+}
+
+<div class="space-y-6">
+    <div class="flex justify-between items-center">
+        <div>
+            <h1 class="text-2xl font-bold text-slate-800">@(isRtl ? "تقرير المخزون" : "Stock Report")</h1>
+            <p class="text-slate-500 mt-1">@(isRtl ? "الكميات الحالية والقيمة" : "Current quantities and valuation")</p>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-xl shadow-sm border p-4">
+        <form method="get" class="flex gap-4 items-end">
+            <div>
+                <label class="block text-sm text-slate-600 mb-1">@(isRtl ? "المستودع" : "Warehouse")</label>
+                <select name="warehouseId" class="border rounded-lg px-3 py-2 text-sm" asp-items="ViewBag.Warehouses as SelectList">
+                    <option value="">@(isRtl ? "الكل" : "All")</option>
+                </select>
+            </div>
+            <button type="submit" class="bg-slate-100 hover:bg-slate-200 px-4 py-2 rounded-lg text-sm">
+                <i class="fas fa-filter"></i> @(isRtl ? "تصفية" : "Filter")
+            </button>
+        </form>
+    </div>
+
+    <!-- Summary -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div class="bg-white rounded-xl shadow-sm border p-4 text-center">
+            <p class="text-sm text-slate-500">@(isRtl ? "إجمالي المنتجات" : "Total Products")</p>
+            <p class="text-2xl font-bold text-purple-600">@Model.Select(r => r.ProductId).Distinct().Count()</p>
+        </div>
+        <div class="bg-white rounded-xl shadow-sm border p-4 text-center">
+            <p class="text-sm text-slate-500">@(isRtl ? "إجمالي الكمية" : "Total Quantity")</p>
+            <p class="text-2xl font-bold text-blue-600">@Model.Sum(r => r.OnHand).ToString("N0")</p>
+        </div>
+        <div class="bg-white rounded-xl shadow-sm border p-4 text-center">
+            <p class="text-sm text-slate-500">@(isRtl ? "إجمالي القيمة" : "Total Value")</p>
+            <p class="text-2xl font-bold text-green-600">@Model.Sum(r => r.TotalValue).ToString("N2")</p>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-xl shadow-sm border overflow-hidden">
+        <table class="w-full text-sm">
+            <thead class="bg-slate-50 text-slate-600">
+                <tr>
+                    <th class="px-4 py-3 text-start">@(isRtl ? "المنتج" : "Product")</th>
+                    <th class="px-4 py-3 text-start">@(isRtl ? "الموقع" : "Location")</th>
+                    <th class="px-4 py-3 text-end">@(isRtl ? "بالمخزن" : "On Hand")</th>
+                    <th class="px-4 py-3 text-end">@(isRtl ? "محجوز" : "Reserved")</th>
+                    <th class="px-4 py-3 text-end">@(isRtl ? "متاح" : "Available")</th>
+                    <th class="px-4 py-3 text-end">@(isRtl ? "تكلفة الوحدة" : "Unit Cost")</th>
+                    <th class="px-4 py-3 text-end">@(isRtl ? "القيمة" : "Value")</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y">
+                @foreach (var item in Model)
+                {
+                    <tr class="hover:bg-slate-50">
+                        <td class="px-4 py-3">
+                            <a href="/Inventory/Product/Details/@item.ProductId" class="text-purple-600 hover:underline font-medium">
+                                @(isRtl && !string.IsNullOrEmpty(item.ProductNameAr) ? item.ProductNameAr : item.ProductName)
+                            </a>
+                            <div class="text-xs text-slate-400">@item.InternalReference</div>
+                        </td>
+                        <td class="px-4 py-3 text-slate-600">@item.LocationName</td>
+                        <td class="px-4 py-3 text-end font-medium">@item.OnHand.ToString("N2")</td>
+                        <td class="px-4 py-3 text-end text-orange-600">@item.Reserved.ToString("N2")</td>
+                        <td class="px-4 py-3 text-end text-green-600 font-medium">@item.Available.ToString("N2")</td>
+                        <td class="px-4 py-3 text-end">@item.UnitCost.ToString("N2")</td>
+                        <td class="px-4 py-3 text-end font-semibold">@item.TotalValue.ToString("N2")</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

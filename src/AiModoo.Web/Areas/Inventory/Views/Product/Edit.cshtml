@@ -1,0 +1,99 @@
+@model Product
+@{
+    ViewData["Title"] = "Edit Product";
+    var isRtl = CultureInfo.CurrentCulture.TextInfo.IsRightToLeft;
+}
+
+<div class="max-w-4xl mx-auto space-y-6">
+    <div class="flex items-center gap-4">
+        <a href="/Inventory/Product/Details/@Model.Id" class="text-slate-400 hover:text-slate-600"><i class="fas fa-arrow-left"></i></a>
+        <h1 class="text-2xl font-bold text-slate-800">@(isRtl ? "تعديل المنتج" : "Edit Product"): @Model.Name</h1>
+    </div>
+
+    <form method="post" asp-action="Edit" class="space-y-6">
+        @Html.AntiForgeryToken()
+        <input type="hidden" name="Id" value="@Model.Id" />
+
+        <div class="bg-white rounded-xl shadow-sm border p-6 space-y-4">
+            <h2 class="text-lg font-semibold border-b pb-2">@(isRtl ? "معلومات أساسية" : "Basic Information")</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">@(isRtl ? "الاسم (EN)" : "Name (EN)") *</label>
+                    <input type="text" name="Name" value="@Model.Name" required class="w-full border rounded-lg px-3 py-2" />
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">@(isRtl ? "الاسم (AR)" : "Name (AR)")</label>
+                    <input type="text" name="NameAr" value="@Model.NameAr" class="w-full border rounded-lg px-3 py-2" dir="rtl" />
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">@(isRtl ? "المرجع الداخلي" : "Internal Reference")</label>
+                    <input type="text" name="InternalReference" value="@Model.InternalReference" class="w-full border rounded-lg px-3 py-2" />
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">@(isRtl ? "الباركود" : "Barcode")</label>
+                    <input type="text" name="Barcode" value="@Model.Barcode" class="w-full border rounded-lg px-3 py-2" />
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">@(isRtl ? "النوع" : "Product Type")</label>
+                    <select name="Type" class="w-full border rounded-lg px-3 py-2">
+                        <option value="1" selected="@(Model.Type == ProductType.Storable)">@(isRtl ? "مخزني" : "Storable")</option>
+                        <option value="2" selected="@(Model.Type == ProductType.Consumable)">@(isRtl ? "استهلاكي" : "Consumable")</option>
+                        <option value="3" selected="@(Model.Type == ProductType.Service)">@(isRtl ? "خدمة" : "Service")</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">@(isRtl ? "الفئة" : "Category")</label>
+                    <select name="CategoryId" class="w-full border rounded-lg px-3 py-2" asp-items="ViewBag.Categories as SelectList">
+                        <option value="">@(isRtl ? "-- اختر --" : "-- Select --")</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-xl shadow-sm border p-6 space-y-4">
+            <h2 class="text-lg font-semibold border-b pb-2">@(isRtl ? "التسعير" : "Pricing")</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">@(isRtl ? "سعر البيع" : "Sale Price")</label>
+                    <input type="number" step="0.01" name="SalePrice" value="@Model.SalePrice" class="w-full border rounded-lg px-3 py-2" />
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">@(isRtl ? "التكلفة" : "Cost")</label>
+                    <input type="number" step="0.01" name="Cost" value="@Model.Cost" class="w-full border rounded-lg px-3 py-2" />
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">@(isRtl ? "طريقة التكلفة" : "Cost Method")</label>
+                    <select name="CostMethod" class="w-full border rounded-lg px-3 py-2">
+                        <option value="1" selected="@(Model.CostMethod == CostMethod.Standard)">@(isRtl ? "قياسية" : "Standard")</option>
+                        <option value="2" selected="@(Model.CostMethod == CostMethod.AverageCost)">@(isRtl ? "متوسط مرجح" : "Average Cost")</option>
+                        <option value="3" selected="@(Model.CostMethod == CostMethod.FIFO)">FIFO</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-xl shadow-sm border p-6 space-y-4">
+            <div class="flex gap-6">
+                <label class="flex items-center gap-2">
+                    <input type="checkbox" name="CanBeSold" value="true" checked="@Model.CanBeSold" class="rounded" />
+                    <span class="text-sm">@(isRtl ? "قابل للبيع" : "Can be Sold")</span>
+                </label>
+                <label class="flex items-center gap-2">
+                    <input type="checkbox" name="CanBePurchased" value="true" checked="@Model.CanBePurchased" class="rounded" />
+                    <span class="text-sm">@(isRtl ? "قابل للشراء" : "Can be Purchased")</span>
+                </label>
+                <label class="flex items-center gap-2">
+                    <input type="checkbox" name="IsActive" value="true" checked="@Model.IsActive" class="rounded" />
+                    <span class="text-sm">@(isRtl ? "نشط" : "Active")</span>
+                </label>
+            </div>
+        </div>
+
+        <div class="flex gap-3">
+            <button type="submit" class="bg-purple-600 hover:bg-purple-700 text-white px-6 py-2 rounded-lg">
+                <i class="fas fa-save"></i> @(isRtl ? "حفظ التعديلات" : "Save Changes")
+            </button>
+            <a href="/Inventory/Product/Details/@Model.Id" class="bg-slate-100 hover:bg-slate-200 px-6 py-2 rounded-lg">@(isRtl ? "إلغاء" : "Cancel")</a>
+        </div>
+    </form>
+</div>

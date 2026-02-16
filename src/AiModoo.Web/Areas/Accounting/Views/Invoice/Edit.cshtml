@@ -1,0 +1,306 @@
+@model Invoice
+
+@{
+    ViewData["Title"] = "تعديل الفاتورة | Edit Invoice";
+    var isRtl = System.Globalization.CultureInfo.CurrentCulture.Name.StartsWith("ar");
+}
+
+<div class="max-w-5xl mx-auto">
+    <!-- Header -->
+    <div class="flex items-center mb-6">
+        <a asp-action="Index" class="text-gray-500 hover:text-gray-700 me-3"><i class="fas fa-arrow-left"></i></a>
+        <h1 class="text-2xl font-bold text-gray-800">@(isRtl ? "تعديل الفاتورة" : "Edit Invoice"): @Model.Number</h1>
+    </div>
+
+    <form asp-action="Edit" method="post">
+        <div asp-validation-summary="All" class="text-red-500 text-sm mb-4"></div>
+        <input type="hidden" asp-for="Id" />
+        <input type="hidden" asp-for="InvoiceType" />
+
+        <!-- Top Section -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">@(isRtl ? "التاريخ" : "Date") *</label>
+                    <input asp-for="Date" type="date" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" required />
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">@(isRtl ? "تاريخ الاستحقاق" : "Due Date") *</label>
+                    <input asp-for="DueDate" type="date" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" required />
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">@(isRtl ? "اسم الشريك" : "Partner Name") *</label>
+                    <input asp-for="PartnerName" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" required />
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">@(isRtl ? "اسم الشريك بالعربي" : "Partner Name (Arabic)")</label>
+                    <input asp-for="PartnerNameAr" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" dir="rtl" />
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">@(isRtl ? "اليومية" : "Journal") *</label>
+                    <select asp-for="JournalId" asp-items="ViewBag.Journals" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" required>
+                        <option value="">@(isRtl ? "اختر اليومية" : "Select Journal")</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">@(isRtl ? "العملة" : "Currency")</label>
+                    <select asp-for="CurrencyId" asp-items="ViewBag.Currencies" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                        <option value="">@(isRtl ? "العملة الافتراضية" : "Default Currency")</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">@(isRtl ? "المرجع" : "Reference")</label>
+                    <input asp-for="Reference" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" />
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">@(isRtl ? "ملاحظات" : "Notes")</label>
+                    <textarea asp-for="Notes" rows="2" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"></textarea>
+                </div>
+            </div>
+        </div>
+
+        <!-- Invoice Lines -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden mb-6">
+            <div class="flex items-center justify-between px-4 py-3 bg-gray-50 border-b border-gray-200">
+                <h2 class="font-semibold text-gray-700">@(isRtl ? "بنود الفاتورة" : "Invoice Lines")</h2>
+                <button type="button" onclick="addLine()" class="text-blue-600 hover:text-blue-800 text-sm font-medium">
+                    <i class="fas fa-plus me-1"></i> @(isRtl ? "إضافة سطر" : "Add Line")
+                </button>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm" id="linesTable">
+                    <thead class="bg-gray-50 text-gray-600">
+                        <tr>
+                            <th class="px-3 py-3 text-start">@(isRtl ? "الوصف" : "Description")</th>
+                            <th class="px-3 py-3 text-start">@(isRtl ? "الحساب" : "Account")</th>
+                            <th class="px-3 py-3 text-end w-20">@(isRtl ? "الكمية" : "Qty")</th>
+                            <th class="px-3 py-3 text-end w-28">@(isRtl ? "سعر الوحدة" : "Unit Price")</th>
+                            <th class="px-3 py-3 text-end w-20">@(isRtl ? "خصم %" : "Disc %")</th>
+                            <th class="px-3 py-3 text-start w-32">@(isRtl ? "الضريبة" : "Tax")</th>
+                            <th class="px-3 py-3 text-end w-28">@(isRtl ? "المجموع الفرعي" : "SubTotal")</th>
+                            <th class="px-3 py-3 text-end w-28">@(isRtl ? "الإجمالي" : "Total")</th>
+                            <th class="px-3 py-3 w-10"></th>
+                        </tr>
+                    </thead>
+                    <tbody id="linesBody">
+                        @for (int i = 0; i < Model.Lines.Count; i++)
+                        {
+                            var line = Model.Lines.ElementAt(i);
+                            <tr class="border-t border-gray-100 line-row">
+                                <td class="px-3 py-2">
+                                    <input name="Lines[@i].Description" value="@line.Description" class="w-full px-2 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500" placeholder="@(isRtl ? "وصف البند" : "Line description")" />
+                                </td>
+                                <td class="px-3 py-2">
+                                    <select name="Lines[@i].AccountId" asp-items="ViewBag.Accounts" class="w-full px-2 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500">
+                                        <option value="">@(isRtl ? "اختر" : "Select")</option>
+                                    </select>
+                                    @if (line.AccountId.HasValue)
+                                    {
+                                        <script>
+                                            document.currentScript.previousElementSibling.value = '@line.AccountId';
+                                        </script>
+                                    }
+                                </td>
+                                <td class="px-3 py-2">
+                                    <input name="Lines[@i].Quantity" type="number" step="0.01" min="0" value="@line.Quantity" class="w-full px-2 py-1.5 border border-gray-300 rounded-lg text-sm text-end focus:ring-2 focus:ring-blue-500 qty-input" />
+                                </td>
+                                <td class="px-3 py-2">
+                                    <input name="Lines[@i].UnitPrice" type="number" step="0.01" min="0" value="@line.UnitPrice" class="w-full px-2 py-1.5 border border-gray-300 rounded-lg text-sm text-end focus:ring-2 focus:ring-blue-500 price-input" />
+                                </td>
+                                <td class="px-3 py-2">
+                                    <input name="Lines[@i].Discount" type="number" step="0.01" min="0" max="100" value="@line.Discount" class="w-full px-2 py-1.5 border border-gray-300 rounded-lg text-sm text-end focus:ring-2 focus:ring-blue-500 discount-input" />
+                                </td>
+                                <td class="px-3 py-2">
+                                    <select name="Lines[@i].TaxId" asp-items="ViewBag.Taxes" class="w-full px-2 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 tax-select">
+                                        <option value="">@(isRtl ? "بدون" : "None")</option>
+                                    </select>
+                                    @if (line.TaxId.HasValue)
+                                    {
+                                        <script>
+                                            document.currentScript.previousElementSibling.value = '@line.TaxId';
+                                        </script>
+                                    }
+                                </td>
+                                <td class="px-3 py-2">
+                                    <span class="line-subtotal font-mono text-sm text-gray-700">0.00</span>
+                                </td>
+                                <td class="px-3 py-2">
+                                    <span class="line-total font-mono text-sm text-gray-900 font-medium">0.00</span>
+                                </td>
+                                <td class="px-3 py-2 text-center">
+                                    <button type="button" onclick="removeLine(this)" class="text-red-500 hover:text-red-700">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Totals Section -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
+            <div class="flex justify-end">
+                <div class="w-full max-w-xs space-y-2">
+                    <div class="flex justify-between text-sm text-gray-600">
+                        <span>@(isRtl ? "المجموع الفرعي" : "SubTotal")</span>
+                        <span class="font-mono" id="invoiceSubTotal">0.00</span>
+                    </div>
+                    <div class="flex justify-between text-sm text-gray-600">
+                        <span>@(isRtl ? "إجمالي الضريبة" : "Tax Total")</span>
+                        <span class="font-mono" id="invoiceTaxTotal">0.00</span>
+                    </div>
+                    <div class="border-t border-gray-200 pt-2 flex justify-between text-lg font-bold text-gray-900">
+                        <span>@(isRtl ? "الإجمالي" : "Grand Total")</span>
+                        <span class="font-mono" id="invoiceGrandTotal">0.00</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="flex justify-end gap-3">
+            <a asp-action="Details" asp-route-id="@Model.Id" class="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition">@(isRtl ? "إلغاء" : "Cancel")</a>
+            <button type="submit" class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
+                <i class="fas fa-save me-1"></i> @(isRtl ? "حفظ التعديلات" : "Save Changes")
+            </button>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+<script>
+    // Capture dropdown HTML from first row for cloning
+    const accountsHtml = document.querySelector('[name="Lines[0].AccountId"]')?.innerHTML || '<option value="">Select</option>';
+    const taxesHtml = document.querySelector('[name="Lines[0].TaxId"]')?.innerHTML || '<option value="">None</option>';
+
+    // Build tax rate lookup
+    const taxRates = {};
+    @if (ViewBag.Taxes != null)
+    {
+        <text>
+        (function() {
+            const taxData = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(
+                ((SelectList)ViewBag.Taxes).Select(t => new { id = t.Value, name = t.Text })
+            ));
+            taxData.forEach(function(t) {
+                const match = t.name.match(/([\d.]+)\s*%/);
+                taxRates[t.id] = match ? parseFloat(match[1]) : 0;
+            });
+        })();
+        </text>
+    }
+
+    let lineIndex = @Model.Lines.Count;
+
+    function addLine() {
+        const tbody = document.getElementById('linesBody');
+        const tr = document.createElement('tr');
+        tr.className = 'border-t border-gray-100 line-row';
+        tr.innerHTML = `
+            <td class="px-3 py-2">
+                <input name="Lines[${lineIndex}].Description" class="w-full px-2 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500" placeholder="@(isRtl ? "وصف البند" : "Line description")" />
+            </td>
+            <td class="px-3 py-2">
+                <select name="Lines[${lineIndex}].AccountId" class="w-full px-2 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500">${accountsHtml}</select>
+            </td>
+            <td class="px-3 py-2">
+                <input name="Lines[${lineIndex}].Quantity" type="number" step="0.01" min="0" value="1" class="w-full px-2 py-1.5 border border-gray-300 rounded-lg text-sm text-end focus:ring-2 focus:ring-blue-500 qty-input" />
+            </td>
+            <td class="px-3 py-2">
+                <input name="Lines[${lineIndex}].UnitPrice" type="number" step="0.01" min="0" value="0" class="w-full px-2 py-1.5 border border-gray-300 rounded-lg text-sm text-end focus:ring-2 focus:ring-blue-500 price-input" />
+            </td>
+            <td class="px-3 py-2">
+                <input name="Lines[${lineIndex}].Discount" type="number" step="0.01" min="0" max="100" value="0" class="w-full px-2 py-1.5 border border-gray-300 rounded-lg text-sm text-end focus:ring-2 focus:ring-blue-500 discount-input" />
+            </td>
+            <td class="px-3 py-2">
+                <select name="Lines[${lineIndex}].TaxId" class="w-full px-2 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 tax-select">${taxesHtml}</select>
+            </td>
+            <td class="px-3 py-2">
+                <span class="line-subtotal font-mono text-sm text-gray-700">0.00</span>
+            </td>
+            <td class="px-3 py-2">
+                <span class="line-total font-mono text-sm text-gray-900 font-medium">0.00</span>
+            </td>
+            <td class="px-3 py-2 text-center">
+                <button type="button" onclick="removeLine(this)" class="text-red-500 hover:text-red-700"><i class="fas fa-times"></i></button>
+            </td>
+        `;
+        tbody.appendChild(tr);
+        lineIndex++;
+        attachLineEvents(tr);
+        updateTotals();
+    }
+
+    function removeLine(btn) {
+        const row = btn.closest('tr');
+        row.remove();
+        reindexLines();
+        updateTotals();
+    }
+
+    function reindexLines() {
+        document.querySelectorAll('.line-row').forEach(function(row, i) {
+            row.querySelectorAll('[name]').forEach(function(el) {
+                el.name = el.name.replace(/Lines\[\d+\]/, 'Lines[' + i + ']');
+            });
+        });
+        lineIndex = document.querySelectorAll('.line-row').length;
+    }
+
+    function getLineValues(row) {
+        var qty = parseFloat(row.querySelector('.qty-input')?.value) || 0;
+        var price = parseFloat(row.querySelector('.price-input')?.value) || 0;
+        var discount = parseFloat(row.querySelector('.discount-input')?.value) || 0;
+        var taxSelect = row.querySelector('.tax-select');
+        var taxId = taxSelect ? taxSelect.value : '';
+        var taxRate = taxId && taxRates[taxId] ? taxRates[taxId] : 0;
+        return { qty: qty, price: price, discount: discount, taxRate: taxRate };
+    }
+
+    function updateTotals() {
+        var invoiceSubTotal = 0;
+        var invoiceTaxTotal = 0;
+        var invoiceGrandTotal = 0;
+
+        document.querySelectorAll('.line-row').forEach(function(row) {
+            var v = getLineValues(row);
+            var lineSubTotal = v.qty * v.price * (1 - v.discount / 100);
+            var lineTax = lineSubTotal * (v.taxRate / 100);
+            var lineTotal = lineSubTotal + lineTax;
+
+            row.querySelector('.line-subtotal').textContent = lineSubTotal.toFixed(2);
+            row.querySelector('.line-total').textContent = lineTotal.toFixed(2);
+
+            invoiceSubTotal += lineSubTotal;
+            invoiceTaxTotal += lineTax;
+            invoiceGrandTotal += lineTotal;
+        });
+
+        document.getElementById('invoiceSubTotal').textContent = invoiceSubTotal.toFixed(2);
+        document.getElementById('invoiceTaxTotal').textContent = invoiceTaxTotal.toFixed(2);
+        document.getElementById('invoiceGrandTotal').textContent = invoiceGrandTotal.toFixed(2);
+    }
+
+    function attachLineEvents(row) {
+        var inputs = row.querySelectorAll('.qty-input, .price-input, .discount-input');
+        inputs.forEach(function(input) {
+            input.addEventListener('input', updateTotals);
+            input.addEventListener('change', updateTotals);
+        });
+        var taxSelect = row.querySelector('.tax-select');
+        if (taxSelect) {
+            taxSelect.addEventListener('change', updateTotals);
+        }
+    }
+
+    // Attach events to existing rows
+    document.querySelectorAll('.line-row').forEach(function(row) {
+        attachLineEvents(row);
+    });
+
+    // Initial calculation
+    updateTotals();
+</script>
+}

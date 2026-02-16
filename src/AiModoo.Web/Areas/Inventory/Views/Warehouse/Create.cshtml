@@ -1,0 +1,45 @@
+@model Warehouse
+@{
+    ViewData["Title"] = "New Warehouse";
+    var isRtl = CultureInfo.CurrentCulture.TextInfo.IsRightToLeft;
+}
+
+<div class="max-w-2xl mx-auto space-y-6">
+    <div class="flex items-center gap-4">
+        <a href="/Inventory/Warehouse" class="text-slate-400 hover:text-slate-600"><i class="fas fa-arrow-left"></i></a>
+        <h1 class="text-2xl font-bold text-slate-800">@(isRtl ? "مستودع جديد" : "New Warehouse")</h1>
+    </div>
+
+    <form method="post" asp-action="Create" class="bg-white rounded-xl shadow-sm border p-6 space-y-4">
+        @Html.AntiForgeryToken()
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+                <label class="block text-sm font-medium text-slate-700 mb-1">@(isRtl ? "الاسم (EN)" : "Name (EN)") *</label>
+                <input type="text" name="Name" required class="w-full border rounded-lg px-3 py-2" />
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-slate-700 mb-1">@(isRtl ? "الاسم (AR)" : "Name (AR)")</label>
+                <input type="text" name="NameAr" class="w-full border rounded-lg px-3 py-2" dir="rtl" />
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-slate-700 mb-1">@(isRtl ? "الرمز" : "Code") *</label>
+                <input type="text" name="Code" required class="w-full border rounded-lg px-3 py-2" maxlength="20" />
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-slate-700 mb-1">@(isRtl ? "العنوان" : "Address")</label>
+                <input type="text" name="Address" class="w-full border rounded-lg px-3 py-2" />
+            </div>
+        </div>
+        <label class="flex items-center gap-2">
+            <input type="checkbox" name="IsActive" value="true" checked class="rounded" />
+            <span class="text-sm">@(isRtl ? "نشط" : "Active")</span>
+        </label>
+        <p class="text-sm text-slate-400"><i class="fas fa-info-circle"></i> @(isRtl ? "سيتم إنشاء المواقع الافتراضية (مخزن، استلام، تسليم) تلقائياً" : "Default locations (Stock, Input, Output) will be created automatically")</p>
+        <div class="flex gap-3 pt-4">
+            <button type="submit" class="bg-purple-600 hover:bg-purple-700 text-white px-6 py-2 rounded-lg">
+                <i class="fas fa-save"></i> @(isRtl ? "حفظ" : "Save")
+            </button>
+            <a href="/Inventory/Warehouse" class="bg-slate-100 hover:bg-slate-200 px-6 py-2 rounded-lg">@(isRtl ? "إلغاء" : "Cancel")</a>
+        </div>
+    </form>
+</div>

@@ -1,0 +1,80 @@
+@model IReadOnlyList<StockPicking>
+@{
+    ViewData["Title"] = "Stock Operations";
+    var isRtl = CultureInfo.CurrentCulture.TextInfo.IsRightToLeft;
+    var currentType = ViewBag.CurrentType as PickingTypeCode?;
+}
+
+<div class="space-y-6">
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+            <h1 class="text-2xl font-bold text-slate-800">
+                @if (currentType == PickingTypeCode.Incoming) { @(isRtl ? "الاستلامات" : "Receipts") }
+                else if (currentType == PickingTypeCode.Outgoing) { @(isRtl ? "أوامر التسليم" : "Delivery Orders") }
+                else if (currentType == PickingTypeCode.Internal) { @(isRtl ? "تحويلات داخلية" : "Internal Transfers") }
+                else { @(isRtl ? "عمليات المخزون" : "Stock Operations") }
+            </h1>
+        </div>
+        <a href="/Inventory/StockPicking/Create?type=@((int?)(currentType))" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg flex items-center gap-2">
+            <i class="fas fa-plus"></i> @(isRtl ? "عملية جديدة" : "New Operation")
+        </a>
+    </div>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg">@TempData["Success"]</div>
+    }
+
+    <!-- Filters -->
+    <div class="bg-white rounded-xl shadow-sm border p-4">
+        <div class="flex gap-2 flex-wrap">
+            <a href="/Inventory/StockPicking" class="px-3 py-1.5 rounded-lg text-sm @(currentType == null ? "bg-purple-100 text-purple-700" : "bg-slate-100 text-slate-600 hover:bg-slate-200")">@(isRtl ? "الكل" : "All")</a>
+            <a href="/Inventory/StockPicking?type=1" class="px-3 py-1.5 rounded-lg text-sm @(currentType == PickingTypeCode.Incoming ? "bg-green-100 text-green-700" : "bg-slate-100 text-slate-600 hover:bg-slate-200")">@(isRtl ? "استلامات" : "Receipts")</a>
+            <a href="/Inventory/StockPicking?type=2" class="px-3 py-1.5 rounded-lg text-sm @(currentType == PickingTypeCode.Outgoing ? "bg-blue-100 text-blue-700" : "bg-slate-100 text-slate-600 hover:bg-slate-200")">@(isRtl ? "تسليمات" : "Deliveries")</a>
+            <a href="/Inventory/StockPicking?type=3" class="px-3 py-1.5 rounded-lg text-sm @(currentType == PickingTypeCode.Internal ? "bg-orange-100 text-orange-700" : "bg-slate-100 text-slate-600 hover:bg-slate-200")">@(isRtl ? "تحويلات" : "Transfers")</a>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-xl shadow-sm border overflow-hidden">
+        <table class="w-full text-sm">
+            <thead class="bg-slate-50 text-slate-600">
+                <tr>
+                    <th class="px-4 py-3 text-start">@(isRtl ? "المرجع" : "Reference")</th>
+                    <th class="px-4 py-3 text-start">@(isRtl ? "النوع" : "Type")</th>
+                    <th class="px-4 py-3 text-start">@(isRtl ? "الشريك" : "Partner")</th>
+                    <th class="px-4 py-3 text-start">@(isRtl ? "من" : "From")</th>
+                    <th class="px-4 py-3 text-start">@(isRtl ? "إلى" : "To")</th>
+                    <th class="px-4 py-3 text-center">@(isRtl ? "المنتجات" : "Products")</th>
+                    <th class="px-4 py-3 text-center">@(isRtl ? "التاريخ" : "Date")</th>
+                    <th class="px-4 py-3 text-center">@(isRtl ? "الحالة" : "Status")</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y">
+                @foreach (var picking in Model)
+                {
+                    var statusColor = picking.Status switch { StockPickingStatus.Done => "green", StockPickingStatus.Cancelled => "red", StockPickingStatus.Ready => "blue", _ => "yellow" };
+                    var statusText = picking.Status switch { StockPickingStatus.Draft => isRtl ? "مسودة" : "Draft", StockPickingStatus.Ready => isRtl ? "جاهز" : "Ready", StockPickingStatus.Done => isRtl ? "تم" : "Done", StockPickingStatus.Cancelled => isRtl ? "ملغي" : "Cancelled", _ => picking.Status.ToString() };
+                    <tr class="hover:bg-slate-50 cursor-pointer" onclick="window.location='/Inventory/StockPicking/Details/@picking.Id'">
+                        <td class="px-4 py-3 font-medium text-purple-600">@picking.Name</td>
+                        <td class="px-4 py-3">@picking.PickingType?.Name</td>
+                        <td class="px-4 py-3">@(picking.PartnerName ?? "-")</td>
+                        <td class="px-4 py-3 text-slate-600 text-xs">@picking.SourceLocation?.Name</td>
+                        <td class="px-4 py-3 text-slate-600 text-xs">@picking.DestLocation?.Name</td>
+                        <td class="px-4 py-3 text-center">@picking.Moves.Count</td>
+                        <td class="px-4 py-3 text-center text-sm">@picking.ScheduledDate.ToString("yyyy-MM-dd")</td>
+                        <td class="px-4 py-3 text-center">
+                            <span class="px-2 py-1 rounded-full text-xs bg-@(statusColor)-100 text-@(statusColor)-700">@statusText</span>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+        @if (!Model.Any())
+        {
+            <div class="text-center py-12 text-slate-400">
+                <i class="fas fa-dolly text-4xl mb-3"></i>
+                <p>@(isRtl ? "لا توجد عمليات" : "No operations found")</p>
+            </div>
+        }
+    </div>
+</div>

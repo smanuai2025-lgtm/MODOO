@@ -1,0 +1,38 @@
+@model AiModoo.Core.Entities.Identity.ApplicationUser
+@{
+    ViewData["Title"] = CultureInfo.CurrentCulture.TextInfo.IsRightToLeft ? "الملف الشخصي" : "Profile";
+    var isRtl = CultureInfo.CurrentCulture.TextInfo.IsRightToLeft;
+}
+
+<div class="max-w-2xl mx-auto">
+    <div class="bg-white rounded-xl shadow-sm p-6">
+        <div class="flex items-center gap-4 mb-6">
+            <div class="w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center">
+                <i class="fas fa-user text-white text-2xl"></i>
+            </div>
+            <div>
+                <h2 class="text-xl font-bold">@Model.FullName</h2>
+                <p class="text-gray-500">@Model.Email</p>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="p-4 bg-gray-50 rounded-lg">
+                <p class="text-sm text-gray-500">@(isRtl ? "الاسم بالإنجليزية" : "English Name")</p>
+                <p class="font-medium">@Model.FullName</p>
+            </div>
+            <div class="p-4 bg-gray-50 rounded-lg">
+                <p class="text-sm text-gray-500">@(isRtl ? "الاسم بالعربية" : "Arabic Name")</p>
+                <p class="font-medium" dir="rtl">@(Model.FullNameAr ?? "-")</p>
+            </div>
+            <div class="p-4 bg-gray-50 rounded-lg">
+                <p class="text-sm text-gray-500">@(isRtl ? "البريد الإلكتروني" : "Email")</p>
+                <p class="font-medium">@Model.Email</p>
+            </div>
+            <div class="p-4 bg-gray-50 rounded-lg">
+                <p class="text-sm text-gray-500">@(isRtl ? "اللغة المفضلة" : "Preferred Language")</p>
+                <p class="font-medium">@(Model.PreferredLanguage == "ar" ? "العربية" : "English")</p>
+            </div>
+        </div>
+    </div>
+</div>

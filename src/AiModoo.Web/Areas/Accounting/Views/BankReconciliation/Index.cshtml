@@ -1,0 +1,46 @@
+@model IEnumerable<BankReconciliation>
+
+@{
+    ViewData["Title"] = "المطابقة البنكية | Bank Reconciliation";
+    var isRtl = System.Globalization.CultureInfo.CurrentCulture.Name.StartsWith("ar");
+}
+
+<div class="flex items-center justify-between mb-6">
+    <h1 class="text-2xl font-bold text-gray-800">@(isRtl ? "المطابقة البنكية" : "Bank Reconciliation")</h1>
+    <a asp-action="Create" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
+        <i class="fas fa-plus me-1"></i> @(isRtl ? "مطابقة جديدة" : "New Reconciliation")
+    </a>
+</div>
+
+<div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+    <table class="w-full text-sm">
+        <thead class="bg-gray-50 text-gray-600">
+            <tr>
+                <th class="px-4 py-3 text-start">@(isRtl ? "الحساب البنكي" : "Bank Account")</th>
+                <th class="px-4 py-3 text-start">@(isRtl ? "التاريخ" : "Date")</th>
+                <th class="px-4 py-3 text-end">@(isRtl ? "الرصيد الافتتاحي" : "Starting")</th>
+                <th class="px-4 py-3 text-end">@(isRtl ? "الرصيد الختامي" : "Ending")</th>
+                <th class="px-4 py-3 text-center">@(isRtl ? "الحالة" : "Status")</th>
+                <th class="px-4 py-3 text-center">@(isRtl ? "الإجراءات" : "Actions")</th>
+            </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-100">
+            @foreach (var recon in Model)
+            {
+                <tr class="hover:bg-gray-50">
+                    <td class="px-4 py-3 font-medium">@recon.BankAccount?.Name</td>
+                    <td class="px-4 py-3 text-gray-600">@recon.Date.ToString("yyyy-MM-dd")</td>
+                    <td class="px-4 py-3 text-end font-mono">@recon.StartingBalance.ToString("N2")</td>
+                    <td class="px-4 py-3 text-end font-mono">@recon.EndingBalance.ToString("N2")</td>
+                    <td class="px-4 py-3 text-center">
+                        <span class="px-2 py-0.5 rounded-full text-xs font-medium
+                            @(recon.Status == ReconciliationStatus.InProgress ? "bg-yellow-100 text-yellow-800" : "bg-green-100 text-green-800")">@recon.Status</span>
+                    </td>
+                    <td class="px-4 py-3 text-center">
+                        <a asp-action="Details" asp-route-id="@recon.Id" class="text-blue-600 hover:text-blue-800"><i class="fas fa-eye"></i></a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

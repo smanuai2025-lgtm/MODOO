@@ -1,0 +1,135 @@
+@model Product
+@{
+    ViewData["Title"] = Model.Name;
+    var isRtl = CultureInfo.CurrentCulture.TextInfo.IsRightToLeft;
+    var onHand = (decimal)(ViewBag.OnHand ?? 0);
+    var available = (decimal)(ViewBag.Available ?? 0);
+}
+
+<div class="space-y-6">
+    @if (TempData["Success"] != null)
+    {
+        <div class="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg">@TempData["Success"]</div>
+    }
+    @if (TempData["Error"] != null)
+    {
+        <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">@TempData["Error"]</div>
+    }
+
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div class="flex items-center gap-4">
+            <a href="/Inventory/Product" class="text-slate-400 hover:text-slate-600"><i class="fas fa-arrow-left"></i></a>
+            <div>
+                <h1 class="text-2xl font-bold text-slate-800">@(isRtl && !string.IsNullOrEmpty(Model.NameAr) ? Model.NameAr : Model.Name)</h1>
+                <p class="text-slate-500">@Model.InternalReference @(Model.Barcode != null ? $"| {Model.Barcode}" : "")</p>
+            </div>
+        </div>
+        <div class="flex gap-2">
+            <a href="/Inventory/Product/Edit/@Model.Id" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm">
+                <i class="fas fa-edit"></i> @(isRtl ? "تعديل" : "Edit")
+            </a>
+            <form method="post" asp-action="Delete" asp-route-id="@Model.Id" onsubmit="return confirm('@(isRtl ? "هل أنت متأكد؟" : "Are you sure?")')">
+                @Html.AntiForgeryToken()
+                <button type="submit" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-sm">
+                    <i class="fas fa-trash"></i> @(isRtl ? "حذف" : "Delete")
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div class="bg-white rounded-xl shadow-sm border p-4 text-center">
+            <p class="text-sm text-slate-500">@(isRtl ? "سعر البيع" : "Sale Price")</p>
+            <p class="text-2xl font-bold text-green-600">@Model.SalePrice.ToString("N2")</p>
+        </div>
+        <div class="bg-white rounded-xl shadow-sm border p-4 text-center">
+            <p class="text-sm text-slate-500">@(isRtl ? "التكلفة" : "Cost")</p>
+            <p class="text-2xl font-bold text-blue-600">@Model.Cost.ToString("N2")</p>
+        </div>
+        <div class="bg-white rounded-xl shadow-sm border p-4 text-center">
+            <p class="text-sm text-slate-500">@(isRtl ? "بالمخزن" : "On Hand")</p>
+            <p class="text-2xl font-bold text-purple-600">@onHand.ToString("N0")</p>
+        </div>
+        <div class="bg-white rounded-xl shadow-sm border p-4 text-center">
+            <p class="text-sm text-slate-500">@(isRtl ? "متاح" : "Available")</p>
+            <p class="text-2xl font-bold text-teal-600">@available.ToString("N0")</p>
+        </div>
+    </div>
+
+    <!-- Product Details -->
+    <div class="bg-white rounded-xl shadow-sm border p-6">
+        <h2 class="text-lg font-semibold mb-4 border-b pb-2">@(isRtl ? "التفاصيل" : "Details")</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-y-3 gap-x-8">
+            <div class="flex justify-between py-2 border-b border-slate-100">
+                <span class="text-slate-500">@(isRtl ? "النوع" : "Type")</span>
+                <span class="font-medium">@Model.Type</span>
+            </div>
+            <div class="flex justify-between py-2 border-b border-slate-100">
+                <span class="text-slate-500">@(isRtl ? "الفئة" : "Category")</span>
+                <span class="font-medium">@(Model.Category?.Name ?? "-")</span>
+            </div>
+            <div class="flex justify-between py-2 border-b border-slate-100">
+                <span class="text-slate-500">@(isRtl ? "وحدة القياس" : "UoM")</span>
+                <span class="font-medium">@(Model.Uom?.Name ?? "-")</span>
+            </div>
+            <div class="flex justify-between py-2 border-b border-slate-100">
+                <span class="text-slate-500">@(isRtl ? "طريقة التكلفة" : "Cost Method")</span>
+                <span class="font-medium">@Model.CostMethod</span>
+            </div>
+            <div class="flex justify-between py-2 border-b border-slate-100">
+                <span class="text-slate-500">@(isRtl ? "التتبع" : "Tracking")</span>
+                <span class="font-medium">@Model.TrackingType</span>
+            </div>
+            <div class="flex justify-between py-2 border-b border-slate-100">
+                <span class="text-slate-500">@(isRtl ? "الوزن" : "Weight")</span>
+                <span class="font-medium">@(Model.Weight > 0 ? $"{Model.Weight:N3} kg" : "-")</span>
+            </div>
+            <div class="flex justify-between py-2 border-b border-slate-100">
+                <span class="text-slate-500">@(isRtl ? "قابل للبيع" : "Can be Sold")</span>
+                <span>@(Model.CanBeSold ? "✓" : "✗")</span>
+            </div>
+            <div class="flex justify-between py-2 border-b border-slate-100">
+                <span class="text-slate-500">@(isRtl ? "قابل للشراء" : "Can be Purchased")</span>
+                <span>@(Model.CanBePurchased ? "✓" : "✗")</span>
+            </div>
+        </div>
+
+        @if (!string.IsNullOrEmpty(Model.Description) || !string.IsNullOrEmpty(Model.DescriptionAr))
+        {
+            <div class="mt-4 pt-4 border-t">
+                <h3 class="font-medium mb-2">@(isRtl ? "الوصف" : "Description")</h3>
+                <p class="text-slate-600">@(isRtl && !string.IsNullOrEmpty(Model.DescriptionAr) ? Model.DescriptionAr : Model.Description)</p>
+            </div>
+        }
+    </div>
+
+    <!-- Stock per Location -->
+    @if (Model.StockQuants?.Any() == true)
+    {
+        <div class="bg-white rounded-xl shadow-sm border p-6">
+            <h2 class="text-lg font-semibold mb-4 border-b pb-2">@(isRtl ? "المخزون حسب الموقع" : "Stock per Location")</h2>
+            <table class="w-full text-sm">
+                <thead class="bg-slate-50">
+                    <tr>
+                        <th class="px-4 py-2 text-start">@(isRtl ? "الموقع" : "Location")</th>
+                        <th class="px-4 py-2 text-end">@(isRtl ? "الكمية" : "Quantity")</th>
+                        <th class="px-4 py-2 text-end">@(isRtl ? "محجوز" : "Reserved")</th>
+                        <th class="px-4 py-2 text-end">@(isRtl ? "متاح" : "Available")</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y">
+                    @foreach (var quant in Model.StockQuants)
+                    {
+                        <tr>
+                            <td class="px-4 py-2">@quant.Location?.CompleteName</td>
+                            <td class="px-4 py-2 text-end font-medium">@quant.Quantity.ToString("N2")</td>
+                            <td class="px-4 py-2 text-end text-orange-600">@quant.ReservedQuantity.ToString("N2")</td>
+                            <td class="px-4 py-2 text-end text-green-600 font-medium">@((quant.Quantity - quant.ReservedQuantity).ToString("N2"))</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>

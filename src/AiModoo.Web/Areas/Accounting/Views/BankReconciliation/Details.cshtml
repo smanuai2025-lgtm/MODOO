@@ -1,0 +1,78 @@
+@model BankReconciliation
+
+@{
+    ViewData["Title"] = "تفاصيل المطابقة | Reconciliation Details";
+    var isRtl = System.Globalization.CultureInfo.CurrentCulture.Name.StartsWith("ar");
+}
+
+<div class="flex items-center justify-between mb-6">
+    <div class="flex items-center gap-3">
+        <a asp-action="Index" class="text-gray-500 hover:text-gray-700"><i class="fas fa-arrow-left"></i></a>
+        <h1 class="text-2xl font-bold text-gray-800">@(isRtl ? "مطابقة بنكية" : "Bank Reconciliation") - @Model.BankAccount?.Name</h1>
+        <span class="px-3 py-1 rounded-full text-sm font-medium @(Model.Status == ReconciliationStatus.InProgress ? "bg-yellow-100 text-yellow-800" : "bg-green-100 text-green-800")">@Model.Status</span>
+    </div>
+    @if (Model.Status == ReconciliationStatus.InProgress)
+    {
+        <form asp-action="Validate" asp-route-id="@Model.Id" method="post">
+            <button type="submit" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700">
+                <i class="fas fa-check-double me-1"></i> @(isRtl ? "اعتماد" : "Validate")
+            </button>
+        </form>
+    }
+</div>
+
+<div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+    <div class="bg-white rounded-xl shadow-sm border p-4">
+        <p class="text-sm text-gray-500">@(isRtl ? "التاريخ" : "Date")</p>
+        <p class="font-medium">@Model.Date.ToString("yyyy-MM-dd")</p>
+    </div>
+    <div class="bg-white rounded-xl shadow-sm border p-4">
+        <p class="text-sm text-gray-500">@(isRtl ? "الرصيد الافتتاحي" : "Starting Balance")</p>
+        <p class="font-mono font-medium">@Model.StartingBalance.ToString("N2")</p>
+    </div>
+    <div class="bg-white rounded-xl shadow-sm border p-4">
+        <p class="text-sm text-gray-500">@(isRtl ? "الرصيد الختامي" : "Ending Balance")</p>
+        <p class="font-mono font-medium">@Model.EndingBalance.ToString("N2")</p>
+    </div>
+</div>
+
+<div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+    <div class="px-4 py-3 bg-gray-50 border-b">
+        <h2 class="font-semibold text-gray-700">@(isRtl ? "بنود المطابقة" : "Reconciliation Lines")</h2>
+    </div>
+    <table class="w-full text-sm">
+        <thead class="bg-gray-50 text-gray-600">
+            <tr>
+                <th class="px-4 py-3 text-start">@(isRtl ? "التاريخ" : "Date")</th>
+                <th class="px-4 py-3 text-start">@(isRtl ? "المرجع" : "Reference")</th>
+                <th class="px-4 py-3 text-start">@(isRtl ? "الوصف" : "Description")</th>
+                <th class="px-4 py-3 text-end">@(isRtl ? "المبلغ" : "Amount")</th>
+                <th class="px-4 py-3 text-center">@(isRtl ? "مطابق" : "Matched")</th>
+            </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-100">
+            @if (Model.Lines != null)
+            {
+                @foreach (var line in Model.Lines)
+                {
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-4 py-3 text-gray-600">@line.Date.ToString("yyyy-MM-dd")</td>
+                        <td class="px-4 py-3">@line.Reference</td>
+                        <td class="px-4 py-3 text-gray-700">@line.Description</td>
+                        <td class="px-4 py-3 text-end font-mono @(line.Amount >= 0 ? "text-green-700" : "text-red-700")">@line.Amount.ToString("N2")</td>
+                        <td class="px-4 py-3 text-center">
+                            @if (line.IsMatched)
+                            {
+                                <span class="text-green-600"><i class="fas fa-check-circle"></i></span>
+                            }
+                            else
+                            {
+                                <span class="text-gray-400"><i class="fas fa-circle"></i></span>
+                            }
+                        </td>
+                    </tr>
+                }
+            }
+        </tbody>
+    </table>
+</div>

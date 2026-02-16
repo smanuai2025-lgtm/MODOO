@@ -1,0 +1,103 @@
+@model IEnumerable<Account>
+
+@{
+    ViewData["Title"] = "دليل الحسابات | Chart of Accounts";
+    var isRtl = System.Globalization.CultureInfo.CurrentCulture.Name.StartsWith("ar");
+}
+
+<div class="flex items-center justify-between mb-6">
+    <div>
+        <h1 class="text-2xl font-bold text-gray-800">@(isRtl ? "دليل الحسابات" : "Chart of Accounts")</h1>
+        <p class="text-gray-500 mt-1">@(isRtl ? "إدارة الحسابات المحاسبية" : "Manage accounting accounts")</p>
+    </div>
+    <div class="flex gap-2">
+        <a asp-action="Tree" class="bg-gray-100 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-200 transition">
+            <i class="fas fa-sitemap me-1"></i> @(isRtl ? "عرض شجري" : "Tree View")
+        </a>
+        <a asp-action="Create" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition">
+            <i class="fas fa-plus me-1"></i> @(isRtl ? "حساب جديد" : "New Account")
+        </a>
+    </div>
+</div>
+
+<div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+    <div class="p-4 border-b border-gray-200">
+        <input type="text" id="searchInput" placeholder="@(isRtl ? "بحث..." : "Search...")"
+               class="w-full md:w-80 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+    </div>
+    <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+            <thead class="bg-gray-50 text-gray-600">
+                <tr>
+                    <th class="px-4 py-3 text-start">@(isRtl ? "الكود" : "Code")</th>
+                    <th class="px-4 py-3 text-start">@(isRtl ? "الاسم" : "Name")</th>
+                    <th class="px-4 py-3 text-start">@(isRtl ? "الاسم بالعربي" : "Arabic Name")</th>
+                    <th class="px-4 py-3 text-start">@(isRtl ? "النوع" : "Type")</th>
+                    <th class="px-4 py-3 text-center">@(isRtl ? "المستوى" : "Level")</th>
+                    <th class="px-4 py-3 text-center">@(isRtl ? "الحالة" : "Status")</th>
+                    <th class="px-4 py-3 text-center">@(isRtl ? "الإجراءات" : "Actions")</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100">
+                @foreach (var account in Model.OrderBy(a => a.Code))
+                {
+                    var paddingClass = account.Level > 0 ? $"ps-{account.Level * 4 + 4}" : "ps-4";
+                    <tr class="hover:bg-gray-50 transition searchable-row">
+                        <td class="@paddingClass py-3 font-mono text-blue-600 font-medium">@account.Code</td>
+                        <td class="px-4 py-3 font-medium @(account.Level == 0 ? "text-gray-800 font-bold" : "text-gray-700")">@account.Name</td>
+                        <td class="px-4 py-3 text-gray-600">@account.NameAr</td>
+                        <td class="px-4 py-3">
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
+                                @(account.AccountType == AccountTypeEnum.Asset ? "bg-blue-100 text-blue-800" :
+                                  account.AccountType == AccountTypeEnum.Liability ? "bg-red-100 text-red-800" :
+                                  account.AccountType == AccountTypeEnum.Equity ? "bg-purple-100 text-purple-800" :
+                                  account.AccountType == AccountTypeEnum.Revenue ? "bg-green-100 text-green-800" :
+                                  "bg-orange-100 text-orange-800")">
+                                @account.AccountType
+                            </span>
+                        </td>
+                        <td class="px-4 py-3 text-center">@account.Level</td>
+                        <td class="px-4 py-3 text-center">
+                            @if (account.IsActive)
+                            {
+                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                    @(isRtl ? "نشط" : "Active")
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600">
+                                    @(isRtl ? "غير نشط" : "Inactive")
+                                </span>
+                            }
+                        </td>
+                        <td class="px-4 py-3 text-center">
+                            <div class="flex items-center justify-center gap-1">
+                                <a asp-action="Edit" asp-route-id="@account.Id" class="text-blue-600 hover:text-blue-800 p-1" title="@(isRtl ? "تعديل" : "Edit")">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <form asp-action="Delete" asp-route-id="@account.Id" method="post" class="inline"
+                                      onsubmit="return confirmDelete('@(isRtl ? "هل أنت متأكد من حذف هذا الحساب؟" : "Are you sure you want to delete this account?")')">
+                                    <button type="submit" class="text-red-500 hover:text-red-700 p-1" title="@(isRtl ? "حذف" : "Delete")">
+                                        <i class="fas fa-trash-alt"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    document.getElementById('searchInput').addEventListener('input', function() {
+        const filter = this.value.toLowerCase();
+        document.querySelectorAll('.searchable-row').forEach(row => {
+            row.style.display = row.textContent.toLowerCase().includes(filter) ? '' : 'none';
+        });
+    });
+</script>
+}

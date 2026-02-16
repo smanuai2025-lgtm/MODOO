@@ -1,0 +1,105 @@
+@model IReadOnlyList<Product>
+@{
+    ViewData["Title"] = "Products";
+    var isRtl = CultureInfo.CurrentCulture.TextInfo.IsRightToLeft;
+    var categories = ViewBag.Categories as IReadOnlyList<ProductCategory>;
+}
+
+<div class="space-y-6">
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+            <h1 class="text-2xl font-bold text-slate-800">@(isRtl ? "المنتجات" : "Products")</h1>
+            <p class="text-slate-500 mt-1">@(isRtl ? "إدارة المنتجات والخدمات" : "Manage products and services")</p>
+        </div>
+        <a href="/Inventory/Product/Create" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg flex items-center gap-2">
+            <i class="fas fa-plus"></i>
+            @(isRtl ? "منتج جديد" : "New Product")
+        </a>
+    </div>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg">@TempData["Success"]</div>
+    }
+
+    <!-- Filters -->
+    <div class="bg-white rounded-xl shadow-sm border p-4">
+        <form method="get" class="flex flex-wrap gap-4 items-end">
+            <div>
+                <label class="block text-sm text-slate-600 mb-1">@(isRtl ? "البحث" : "Search")</label>
+                <input type="text" name="search" value="@ViewBag.CurrentSearch" class="border rounded-lg px-3 py-2 text-sm w-48" placeholder="@(isRtl ? "بحث..." : "Search...")" />
+            </div>
+            <div>
+                <label class="block text-sm text-slate-600 mb-1">@(isRtl ? "النوع" : "Type")</label>
+                <select name="type" class="border rounded-lg px-3 py-2 text-sm">
+                    <option value="">@(isRtl ? "الكل" : "All")</option>
+                    <option value="1" selected="@(ViewBag.CurrentType?.ToString() == "Storable")">@(isRtl ? "مخزني" : "Storable")</option>
+                    <option value="2" selected="@(ViewBag.CurrentType?.ToString() == "Consumable")">@(isRtl ? "استهلاكي" : "Consumable")</option>
+                    <option value="3" selected="@(ViewBag.CurrentType?.ToString() == "Service")">@(isRtl ? "خدمة" : "Service")</option>
+                </select>
+            </div>
+            <button type="submit" class="bg-slate-100 hover:bg-slate-200 px-4 py-2 rounded-lg text-sm">
+                <i class="fas fa-filter"></i> @(isRtl ? "تصفية" : "Filter")
+            </button>
+        </form>
+    </div>
+
+    <!-- Products Table -->
+    <div class="bg-white rounded-xl shadow-sm border overflow-hidden">
+        <table class="w-full text-sm">
+            <thead class="bg-slate-50 text-slate-600">
+                <tr>
+                    <th class="px-4 py-3 text-start">@(isRtl ? "المرجع" : "Reference")</th>
+                    <th class="px-4 py-3 text-start">@(isRtl ? "المنتج" : "Product")</th>
+                    <th class="px-4 py-3 text-start">@(isRtl ? "النوع" : "Type")</th>
+                    <th class="px-4 py-3 text-start">@(isRtl ? "الفئة" : "Category")</th>
+                    <th class="px-4 py-3 text-end">@(isRtl ? "سعر البيع" : "Sale Price")</th>
+                    <th class="px-4 py-3 text-end">@(isRtl ? "التكلفة" : "Cost")</th>
+                    <th class="px-4 py-3 text-center">@(isRtl ? "الحالة" : "Status")</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y">
+                @foreach (var product in Model)
+                {
+                    <tr class="hover:bg-slate-50 cursor-pointer" onclick="window.location='/Inventory/Product/Details/@product.Id'">
+                        <td class="px-4 py-3 font-mono text-xs text-slate-500">@product.InternalReference</td>
+                        <td class="px-4 py-3">
+                            <div class="font-medium">@(isRtl && !string.IsNullOrEmpty(product.NameAr) ? product.NameAr : product.Name)</div>
+                            @if (product.Barcode != null)
+                            {
+                                <div class="text-xs text-slate-400"><i class="fas fa-barcode"></i> @product.Barcode</div>
+                            }
+                        </td>
+                        <td class="px-4 py-3">
+                            @{
+                                var typeColor = product.Type switch { ProductType.Storable => "blue", ProductType.Consumable => "orange", _ => "green" };
+                                var typeName = product.Type switch { ProductType.Storable => isRtl ? "مخزني" : "Storable", ProductType.Consumable => isRtl ? "استهلاكي" : "Consumable", _ => isRtl ? "خدمة" : "Service" };
+                            }
+                            <span class="px-2 py-1 rounded-full text-xs bg-@(typeColor)-100 text-@(typeColor)-700">@typeName</span>
+                        </td>
+                        <td class="px-4 py-3 text-slate-600">@product.Category?.Name</td>
+                        <td class="px-4 py-3 text-end font-medium">@product.SalePrice.ToString("N2")</td>
+                        <td class="px-4 py-3 text-end text-slate-600">@product.Cost.ToString("N2")</td>
+                        <td class="px-4 py-3 text-center">
+                            @if (product.IsActive)
+                            {
+                                <span class="px-2 py-1 rounded-full text-xs bg-green-100 text-green-700">@(isRtl ? "نشط" : "Active")</span>
+                            }
+                            else
+                            {
+                                <span class="px-2 py-1 rounded-full text-xs bg-red-100 text-red-700">@(isRtl ? "غير نشط" : "Inactive")</span>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+        @if (!Model.Any())
+        {
+            <div class="text-center py-12 text-slate-400">
+                <i class="fas fa-box-open text-4xl mb-3"></i>
+                <p>@(isRtl ? "لا توجد منتجات" : "No products found")</p>
+            </div>
+        }
+    </div>
+</div>

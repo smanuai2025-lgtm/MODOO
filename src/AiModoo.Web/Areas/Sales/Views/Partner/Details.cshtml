@@ -1,0 +1,148 @@
+@model Partner
+@{
+    ViewData["Title"] = Model.Name;
+    var isRtl = CultureInfo.CurrentCulture.TextInfo.IsRightToLeft;
+    var balance = (decimal)ViewBag.OutstandingBalance;
+}
+
+<div class="space-y-6">
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div class="flex items-center gap-4">
+            <a href="/Sales/Partner" class="text-slate-400 hover:text-slate-600"><i class="fas fa-arrow-@(isRtl ? "right" : "left") text-lg"></i></a>
+            <div>
+                <h1 class="text-2xl font-bold text-slate-800">@(isRtl && !string.IsNullOrEmpty(Model.NameAr) ? Model.NameAr : Model.Name)</h1>
+                <p class="text-slate-500 mt-1">
+                    @{
+                        var typeName = Model.PartnerType == PartnerType.Customer ? (isRtl ? "عميل" : "Customer") : (isRtl ? "مورد" : "Vendor");
+                        var typeColor = Model.PartnerType == PartnerType.Customer ? "green" : "blue";
+                    }
+                    <span class="px-2 py-1 rounded-full text-xs bg-@(typeColor)-100 text-@(typeColor)-700">@typeName</span>
+                    @if (!string.IsNullOrEmpty(Model.TaxNumber))
+                    {
+                        <span class="text-xs text-slate-400 ms-2">@(isRtl ? "رقم ضريبي:" : "Tax:") @Model.TaxNumber</span>
+                    }
+                </p>
+            </div>
+        </div>
+        <div class="flex gap-2">
+            <a href="/Sales/Partner/Edit/@Model.Id" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm"><i class="fas fa-edit"></i> @(isRtl ? "تعديل" : "Edit")</a>
+            <a href="/Sales/SalesOrder/Create?partnerId=@Model.Id" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm"><i class="fas fa-plus"></i> @(isRtl ? "طلب جديد" : "New Order")</a>
+        </div>
+    </div>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg">@TempData["Success"]</div>
+    }
+
+    <!-- Stats -->
+    <div class="grid grid-cols-1 sm:grid-cols-4 gap-4">
+        <div class="bg-white rounded-xl shadow-sm border p-4 text-center">
+            <p class="text-sm text-slate-500">@(isRtl ? "الطلبات" : "Orders")</p>
+            <p class="text-2xl font-bold text-slate-800">@Model.SalesOrders.Count</p>
+        </div>
+        <div class="bg-white rounded-xl shadow-sm border p-4 text-center">
+            <p class="text-sm text-slate-500">@(isRtl ? "الإيرادات" : "Revenue")</p>
+            <p class="text-2xl font-bold text-green-600">@Model.SalesOrders.Sum(o => o.Total).ToString("N2")</p>
+        </div>
+        <div class="bg-white rounded-xl shadow-sm border p-4 text-center">
+            <p class="text-sm text-slate-500">@(isRtl ? "الرصيد المعلق" : "Outstanding")</p>
+            <p class="text-2xl font-bold @(balance > 0 ? "text-orange-600" : "text-slate-800")">@balance.ToString("N2")</p>
+        </div>
+        <div class="bg-white rounded-xl shadow-sm border p-4 text-center">
+            <p class="text-sm text-slate-500">@(isRtl ? "حد الائتمان" : "Credit Limit")</p>
+            <p class="text-2xl font-bold text-slate-800">@Model.CreditLimit.ToString("N2")</p>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Contact Info -->
+        <div class="bg-white rounded-xl shadow-sm border p-6">
+            <h2 class="text-lg font-semibold text-slate-700 mb-4"><i class="fas fa-address-card text-slate-400 me-2"></i>@(isRtl ? "التواصل" : "Contact Info")</h2>
+            <div class="space-y-3 text-sm">
+                @if (!string.IsNullOrEmpty(Model.Email))
+                {
+                    <div class="flex gap-3"><i class="fas fa-envelope text-slate-400 mt-1"></i><span>@Model.Email</span></div>
+                }
+                @if (!string.IsNullOrEmpty(Model.Phone))
+                {
+                    <div class="flex gap-3"><i class="fas fa-phone text-slate-400 mt-1"></i><span>@Model.Phone</span></div>
+                }
+                @if (!string.IsNullOrEmpty(Model.Mobile))
+                {
+                    <div class="flex gap-3"><i class="fas fa-mobile-alt text-slate-400 mt-1"></i><span>@Model.Mobile</span></div>
+                }
+                @if (!string.IsNullOrEmpty(Model.Website))
+                {
+                    <div class="flex gap-3"><i class="fas fa-globe text-slate-400 mt-1"></i><a href="@Model.Website" target="_blank" class="text-blue-600 hover:underline">@Model.Website</a></div>
+                }
+                @if (!string.IsNullOrEmpty(Model.Street) || !string.IsNullOrEmpty(Model.City))
+                {
+                    <div class="flex gap-3">
+                        <i class="fas fa-map-marker-alt text-slate-400 mt-1"></i>
+                        <span>@Model.Street, @Model.City @Model.State @Model.Country @Model.ZipCode</span>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <!-- Accounting Info -->
+        <div class="bg-white rounded-xl shadow-sm border p-6">
+            <h2 class="text-lg font-semibold text-slate-700 mb-4"><i class="fas fa-calculator text-slate-400 me-2"></i>@(isRtl ? "المحاسبة" : "Accounting")</h2>
+            <div class="space-y-3 text-sm">
+                @if (Model.PaymentTerm != null)
+                {
+                    <div class="flex justify-between"><span class="text-slate-500">@(isRtl ? "شروط الدفع" : "Payment Term")</span><span>@Model.PaymentTerm.Name</span></div>
+                }
+                @if (Model.Pricelist != null)
+                {
+                    <div class="flex justify-between"><span class="text-slate-500">@(isRtl ? "قائمة الأسعار" : "Pricelist")</span><span>@Model.Pricelist.Name</span></div>
+                }
+                @if (Model.AccountReceivable != null)
+                {
+                    <div class="flex justify-between"><span class="text-slate-500">@(isRtl ? "حساب المدينين" : "Receivable Account")</span><span>@Model.AccountReceivable.Name</span></div>
+                }
+                @if (Model.AccountPayable != null)
+                {
+                    <div class="flex justify-between"><span class="text-slate-500">@(isRtl ? "حساب الدائنين" : "Payable Account")</span><span>@Model.AccountPayable.Name</span></div>
+                }
+            </div>
+        </div>
+    </div>
+
+    <!-- Sales Orders -->
+    @if (Model.SalesOrders.Any())
+    {
+        <div class="bg-white rounded-xl shadow-sm border overflow-hidden">
+            <div class="px-6 py-4 border-b">
+                <h2 class="text-lg font-semibold text-slate-700">@(isRtl ? "طلبات البيع" : "Sales Orders")</h2>
+            </div>
+            <table class="w-full text-sm">
+                <thead class="bg-slate-50 text-slate-600">
+                    <tr>
+                        <th class="px-4 py-3 text-start">@(isRtl ? "الرقم" : "Number")</th>
+                        <th class="px-4 py-3 text-start">@(isRtl ? "التاريخ" : "Date")</th>
+                        <th class="px-4 py-3 text-center">@(isRtl ? "الحالة" : "Status")</th>
+                        <th class="px-4 py-3 text-end">@(isRtl ? "المبلغ" : "Total")</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y">
+                    @foreach (var order in Model.SalesOrders.OrderByDescending(o => o.OrderDate))
+                    {
+                        <tr class="hover:bg-slate-50 cursor-pointer" onclick="window.location='/Sales/SalesOrder/Details/@order.Id'">
+                            <td class="px-4 py-3 font-mono text-blue-600">@order.Number</td>
+                            <td class="px-4 py-3 text-slate-600">@order.OrderDate.ToString("yyyy-MM-dd")</td>
+                            <td class="px-4 py-3 text-center">
+                                @{
+                                    var sc = order.Status switch { SalesOrderStatus.Quotation => "amber", SalesOrderStatus.SalesOrder => "blue", SalesOrderStatus.Done => "green", SalesOrderStatus.Cancelled => "red", _ => "slate" };
+                                }
+                                <span class="px-2 py-1 rounded-full text-xs bg-@(sc)-100 text-@(sc)-700">@order.Status</span>
+                            </td>
+                            <td class="px-4 py-3 text-end font-medium">@order.Total.ToString("N2")</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>

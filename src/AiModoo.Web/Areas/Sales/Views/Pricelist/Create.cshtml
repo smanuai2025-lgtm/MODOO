@@ -1,0 +1,42 @@
+@model Pricelist
+@{
+    ViewData["Title"] = "New Pricelist";
+    var isRtl = CultureInfo.CurrentCulture.TextInfo.IsRightToLeft;
+}
+
+<div class="space-y-6">
+    <div class="flex items-center gap-4">
+        <a href="/Sales/Pricelist" class="text-slate-400 hover:text-slate-600"><i class="fas fa-arrow-@(isRtl ? "right" : "left") text-lg"></i></a>
+        <h1 class="text-2xl font-bold text-slate-800">@(isRtl ? "قائمة أسعار جديدة" : "New Pricelist")</h1>
+    </div>
+
+    @if (!ViewData.ModelState.IsValid)
+    {
+        <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+            @foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+            { <p>@error.ErrorMessage</p> }
+        </div>
+    }
+
+    <form method="post" asp-action="Create">
+        <div class="bg-white rounded-xl shadow-sm border p-6 space-y-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">@(isRtl ? "الاسم (إنجليزي)" : "Name (English)") *</label>
+                    <input type="text" asp-for="Name" required class="w-full border rounded-lg px-3 py-2 text-sm" />
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">@(isRtl ? "الاسم (عربي)" : "Name (Arabic)")</label>
+                    <input type="text" asp-for="NameAr" class="w-full border rounded-lg px-3 py-2 text-sm" dir="rtl" />
+                </div>
+            </div>
+        </div>
+
+        <div class="flex justify-end gap-3 mt-6">
+            <a href="/Sales/Pricelist" class="px-4 py-2 border rounded-lg hover:bg-slate-50">@(isRtl ? "إلغاء" : "Cancel")</a>
+            <button type="submit" class="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg">
+                <i class="fas fa-save"></i> @(isRtl ? "حفظ" : "Save")
+            </button>
+        </div>
+    </form>
+</div>

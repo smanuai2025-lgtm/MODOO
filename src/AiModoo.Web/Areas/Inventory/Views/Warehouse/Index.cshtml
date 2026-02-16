@@ -1,0 +1,46 @@
+@model IReadOnlyList<Warehouse>
+@{
+    ViewData["Title"] = "Warehouses";
+    var isRtl = CultureInfo.CurrentCulture.TextInfo.IsRightToLeft;
+}
+
+<div class="space-y-6">
+    <div class="flex justify-between items-center">
+        <div>
+            <h1 class="text-2xl font-bold text-slate-800">@(isRtl ? "المستودعات" : "Warehouses")</h1>
+            <p class="text-slate-500 mt-1">@(isRtl ? "إدارة المستودعات والمواقع" : "Manage warehouses and locations")</p>
+        </div>
+        <a href="/Inventory/Warehouse/Create" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg flex items-center gap-2">
+            <i class="fas fa-plus"></i>
+            @(isRtl ? "مستودع جديد" : "New Warehouse")
+        </a>
+    </div>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg">@TempData["Success"]</div>
+    }
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        @foreach (var wh in Model)
+        {
+            <div class="bg-white rounded-xl shadow-sm border p-6 hover:shadow-md transition cursor-pointer" onclick="window.location='/Inventory/Warehouse/Details/@wh.Id'">
+                <div class="flex items-center gap-3 mb-4">
+                    <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
+                        <i class="fas fa-warehouse text-purple-600 text-xl"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-lg">@(isRtl && !string.IsNullOrEmpty(wh.NameAr) ? wh.NameAr : wh.Name)</h3>
+                        <p class="text-sm text-slate-500 font-mono">@wh.Code</p>
+                    </div>
+                </div>
+                <div class="flex justify-between text-sm text-slate-600">
+                    <span>@(isRtl ? "المواقع" : "Locations"): @(wh.Locations?.Count ?? 0)</span>
+                    <span class="px-2 py-0.5 rounded-full text-xs @(wh.IsActive ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700")">
+                        @(wh.IsActive ? (isRtl ? "نشط" : "Active") : (isRtl ? "غير نشط" : "Inactive"))
+                    </span>
+                </div>
+            </div>
+        }
+    </div>
+</div>

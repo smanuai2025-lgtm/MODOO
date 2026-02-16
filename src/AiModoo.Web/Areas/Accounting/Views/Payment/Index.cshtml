@@ -1,0 +1,69 @@
+@model IEnumerable<Payment>
+
+@{
+    ViewData["Title"] = "المدفوعات | Payments";
+    var isRtl = System.Globalization.CultureInfo.CurrentCulture.Name.StartsWith("ar");
+}
+
+<div class="flex items-center justify-between mb-6">
+    <div>
+        <h1 class="text-2xl font-bold text-gray-800">@(isRtl ? "المدفوعات" : "Payments")</h1>
+    </div>
+    <div class="flex gap-2">
+        <a asp-action="Create" asp-route-type="@PaymentType.Inbound" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition">
+            <i class="fas fa-arrow-down me-1"></i> @(isRtl ? "مقبوضات" : "Receive")
+        </a>
+        <a asp-action="Create" asp-route-type="@PaymentType.Outbound" class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition">
+            <i class="fas fa-arrow-up me-1"></i> @(isRtl ? "مدفوعات" : "Pay")
+        </a>
+    </div>
+</div>
+
+<div class="flex gap-2 mb-4">
+    <a asp-action="Index" class="px-3 py-1.5 rounded-lg text-sm @(ViewBag.CurrentType == null ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-700")">@(isRtl ? "الكل" : "All")</a>
+    <a asp-action="Index" asp-route-type="@PaymentType.Inbound" class="px-3 py-1.5 rounded-lg text-sm @(ViewBag.CurrentType?.ToString() == "Inbound" ? "bg-green-600 text-white" : "bg-gray-100 text-gray-700")">@(isRtl ? "مقبوضات" : "Inbound")</a>
+    <a asp-action="Index" asp-route-type="@PaymentType.Outbound" class="px-3 py-1.5 rounded-lg text-sm @(ViewBag.CurrentType?.ToString() == "Outbound" ? "bg-red-500 text-white" : "bg-gray-100 text-gray-700")">@(isRtl ? "مدفوعات" : "Outbound")</a>
+</div>
+
+<div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+    <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+            <thead class="bg-gray-50 text-gray-600">
+                <tr>
+                    <th class="px-4 py-3 text-start">@(isRtl ? "الرقم" : "Number")</th>
+                    <th class="px-4 py-3 text-start">@(isRtl ? "التاريخ" : "Date")</th>
+                    <th class="px-4 py-3 text-start">@(isRtl ? "النوع" : "Type")</th>
+                    <th class="px-4 py-3 text-start">@(isRtl ? "طريقة الدفع" : "Method")</th>
+                    <th class="px-4 py-3 text-end">@(isRtl ? "المبلغ" : "Amount")</th>
+                    <th class="px-4 py-3 text-center">@(isRtl ? "الحالة" : "Status")</th>
+                    <th class="px-4 py-3 text-center">@(isRtl ? "الإجراءات" : "Actions")</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100">
+                @foreach (var payment in Model.OrderByDescending(p => p.Date))
+                {
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-4 py-3"><a asp-action="Details" asp-route-id="@payment.Id" class="text-blue-600 hover:underline font-medium">@payment.Number</a></td>
+                        <td class="px-4 py-3 text-gray-600">@payment.Date.ToString("yyyy-MM-dd")</td>
+                        <td class="px-4 py-3">
+                            <span class="px-2 py-0.5 rounded-full text-xs font-medium @(payment.PaymentType == PaymentType.Inbound ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800")">
+                                @payment.PaymentType
+                            </span>
+                        </td>
+                        <td class="px-4 py-3 text-gray-600">@payment.PaymentMethod?.Name</td>
+                        <td class="px-4 py-3 text-end font-mono font-medium">@payment.Amount.ToString("N2")</td>
+                        <td class="px-4 py-3 text-center">
+                            <span class="px-2 py-0.5 rounded-full text-xs font-medium
+                                @(payment.Status == PaymentStatus.Draft ? "bg-yellow-100 text-yellow-800" :
+                                  payment.Status == PaymentStatus.Posted ? "bg-green-100 text-green-800" :
+                                  "bg-red-100 text-red-800")">@payment.Status</span>
+                        </td>
+                        <td class="px-4 py-3 text-center">
+                            <a asp-action="Details" asp-route-id="@payment.Id" class="text-blue-600 hover:text-blue-800"><i class="fas fa-eye"></i></a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

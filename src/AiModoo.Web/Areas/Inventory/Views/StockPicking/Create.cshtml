@@ -1,0 +1,110 @@
+@model StockPicking
+@{
+    ViewData["Title"] = "New Stock Operation";
+    var isRtl = CultureInfo.CurrentCulture.TextInfo.IsRightToLeft;
+}
+
+<div class="max-w-5xl mx-auto space-y-6">
+    <div class="flex items-center gap-4">
+        <a href="/Inventory/StockPicking" class="text-slate-400 hover:text-slate-600"><i class="fas fa-arrow-left"></i></a>
+        <h1 class="text-2xl font-bold text-slate-800">@(isRtl ? "عملية مخزنية جديدة" : "New Stock Operation")</h1>
+    </div>
+
+    <form method="post" asp-action="Create" class="space-y-6">
+        @Html.AntiForgeryToken()
+
+        <div class="bg-white rounded-xl shadow-sm border p-6 space-y-4">
+            <h2 class="text-lg font-semibold border-b pb-2">@(isRtl ? "معلومات العملية" : "Operation Info")</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">@(isRtl ? "نوع العملية" : "Operation Type") *</label>
+                    <select name="PickingTypeId" class="w-full border rounded-lg px-3 py-2" asp-items="ViewBag.PickingTypes as SelectList">
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">@(isRtl ? "من موقع" : "Source Location") *</label>
+                    <select name="SourceLocationId" class="w-full border rounded-lg px-3 py-2" asp-items="ViewBag.Locations as SelectList">
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">@(isRtl ? "إلى موقع" : "Destination Location") *</label>
+                    <select name="DestLocationId" class="w-full border rounded-lg px-3 py-2" asp-items="ViewBag.Locations as SelectList">
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">@(isRtl ? "اسم الشريك" : "Partner Name")</label>
+                    <input type="text" name="PartnerName" class="w-full border rounded-lg px-3 py-2" />
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">@(isRtl ? "التاريخ المجدول" : "Scheduled Date")</label>
+                    <input type="date" name="ScheduledDate" value="@Model.ScheduledDate.ToString("yyyy-MM-dd")" class="w-full border rounded-lg px-3 py-2" />
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">@(isRtl ? "مستند المصدر" : "Source Document")</label>
+                    <input type="text" name="SourceDocument" class="w-full border rounded-lg px-3 py-2" />
+                </div>
+            </div>
+        </div>
+
+        <!-- Move Lines -->
+        <div class="bg-white rounded-xl shadow-sm border p-6">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-lg font-semibold">@(isRtl ? "حركات المخزون" : "Stock Moves")</h2>
+                <button type="button" onclick="addMoveLine()" class="bg-slate-100 hover:bg-slate-200 px-3 py-1.5 rounded-lg text-sm">
+                    <i class="fas fa-plus"></i> @(isRtl ? "إضافة سطر" : "Add Line")
+                </button>
+            </div>
+            <table class="w-full text-sm" id="movesTable">
+                <thead class="bg-slate-50">
+                    <tr>
+                        <th class="px-3 py-2 text-start">@(isRtl ? "المنتج" : "Product") *</th>
+                        <th class="px-3 py-2 text-end" style="width:150px">@(isRtl ? "الكمية" : "Quantity") *</th>
+                        <th class="px-3 py-2" style="width:50px"></th>
+                    </tr>
+                </thead>
+                <tbody id="moveLines">
+                    @for (int i = 0; i < (Model.Moves?.Count ?? 1); i++)
+                    {
+                        <tr class="border-b">
+                            <td class="px-3 py-2">
+                                <select name="Moves[@i].ProductId" class="w-full border rounded px-2 py-1.5 text-sm" asp-items="ViewBag.Products as SelectList">
+                                    <option value="0">@(isRtl ? "-- اختر المنتج --" : "-- Select Product --")</option>
+                                </select>
+                            </td>
+                            <td class="px-3 py-2">
+                                <input type="number" step="0.01" name="Moves[@i].ProductUomQty" value="1" min="0.01" class="w-full border rounded px-2 py-1.5 text-sm text-end" />
+                            </td>
+                            <td class="px-3 py-2 text-center">
+                                <button type="button" onclick="this.closest('tr').remove()" class="text-red-400 hover:text-red-600"><i class="fas fa-trash"></i></button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <div class="flex gap-3">
+            <button type="submit" class="bg-purple-600 hover:bg-purple-700 text-white px-6 py-2 rounded-lg">
+                <i class="fas fa-save"></i> @(isRtl ? "حفظ" : "Save")
+            </button>
+            <a href="/Inventory/StockPicking" class="bg-slate-100 hover:bg-slate-200 px-6 py-2 rounded-lg">@(isRtl ? "إلغاء" : "Cancel")</a>
+        </div>
+    </form>
+</div>
+
+<script>
+    let moveIndex = @(Model.Moves?.Count ?? 1);
+    function addMoveLine() {
+        const tbody = document.getElementById('moveLines');
+        const productOptions = tbody.querySelector('select')?.innerHTML || '<option value="0">-- Select --</option>';
+        const tr = document.createElement('tr');
+        tr.className = 'border-b';
+        tr.innerHTML = `
+            <td class="px-3 py-2"><select name="Moves[${moveIndex}].ProductId" class="w-full border rounded px-2 py-1.5 text-sm">${productOptions}</select></td>
+            <td class="px-3 py-2"><input type="number" step="0.01" name="Moves[${moveIndex}].ProductUomQty" value="1" min="0.01" class="w-full border rounded px-2 py-1.5 text-sm text-end" /></td>
+            <td class="px-3 py-2 text-center"><button type="button" onclick="this.closest('tr').remove()" class="text-red-400 hover:text-red-600"><i class="fas fa-trash"></i></button></td>
+        `;
+        tbody.appendChild(tr);
+        moveIndex++;
+    }
+</script>

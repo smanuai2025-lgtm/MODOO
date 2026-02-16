@@ -1,0 +1,170 @@
+@model IEnumerable<Invoice>
+
+@{
+    ViewData["Title"] = "الفواتير | Invoices";
+    var isRtl = System.Globalization.CultureInfo.CurrentCulture.Name.StartsWith("ar");
+}
+
+<div class="flex items-center justify-between mb-6">
+    <div>
+        <h1 class="text-2xl font-bold text-gray-800">@(isRtl ? "الفواتير" : "Invoices")</h1>
+    </div>
+    <div class="flex gap-2">
+        <a asp-action="Create" asp-route-type="@InvoiceType.CustomerInvoice" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition">
+            <i class="fas fa-file-invoice me-1"></i> @(isRtl ? "فاتورة عميل" : "Customer Invoice")
+        </a>
+        <a asp-action="Create" asp-route-type="@InvoiceType.VendorBill" class="bg-orange-500 text-white px-4 py-2 rounded-lg hover:bg-orange-600 transition">
+            <i class="fas fa-file-invoice-dollar me-1"></i> @(isRtl ? "فاتورة مورد" : "Vendor Bill")
+        </a>
+    </div>
+</div>
+
+<!-- Type Filter Tabs -->
+<div class="flex gap-2 mb-4">
+    <a asp-action="Index"
+       class="px-3 py-1.5 rounded-lg text-sm @(ViewBag.CurrentType == null ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-700 hover:bg-gray-200")">
+        @(isRtl ? "الكل" : "All")
+    </a>
+    <a asp-action="Index" asp-route-type="@InvoiceType.CustomerInvoice"
+       class="px-3 py-1.5 rounded-lg text-sm @(ViewBag.CurrentType?.ToString() == "CustomerInvoice" ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-700 hover:bg-gray-200")">
+        @(isRtl ? "فواتير العملاء" : "Customer Invoices")
+    </a>
+    <a asp-action="Index" asp-route-type="@InvoiceType.VendorBill"
+       class="px-3 py-1.5 rounded-lg text-sm @(ViewBag.CurrentType?.ToString() == "VendorBill" ? "bg-orange-500 text-white" : "bg-gray-100 text-gray-700 hover:bg-gray-200")">
+        @(isRtl ? "فواتير الموردين" : "Vendor Bills")
+    </a>
+    <a asp-action="Index" asp-route-type="@InvoiceType.CustomerCreditNote"
+       class="px-3 py-1.5 rounded-lg text-sm @(ViewBag.CurrentType?.ToString() == "CustomerCreditNote" ? "bg-purple-600 text-white" : "bg-gray-100 text-gray-700 hover:bg-gray-200")">
+        @(isRtl ? "إشعارات دائنة" : "Credit Notes")
+    </a>
+    <a asp-action="Index" asp-route-type="@InvoiceType.VendorDebitNote"
+       class="px-3 py-1.5 rounded-lg text-sm @(ViewBag.CurrentType?.ToString() == "VendorDebitNote" ? "bg-teal-600 text-white" : "bg-gray-100 text-gray-700 hover:bg-gray-200")">
+        @(isRtl ? "إشعارات مدينة" : "Debit Notes")
+    </a>
+</div>
+
+<!-- Status Filter Pills -->
+<div class="flex gap-2 mb-6">
+    <a asp-action="Index" asp-route-type="@ViewBag.CurrentType"
+       class="px-3 py-1 rounded-full text-xs font-medium border @(ViewBag.CurrentStatus == null ? "bg-gray-800 text-white border-gray-800" : "bg-white text-gray-600 border-gray-300 hover:bg-gray-50")">
+        @(isRtl ? "الكل" : "All")
+    </a>
+    <a asp-action="Index" asp-route-type="@ViewBag.CurrentType" asp-route-status="@InvoiceStatus.Draft"
+       class="px-3 py-1 rounded-full text-xs font-medium border @(ViewBag.CurrentStatus?.ToString() == "Draft" ? "bg-yellow-500 text-white border-yellow-500" : "bg-white text-yellow-700 border-yellow-300 hover:bg-yellow-50")">
+        @(isRtl ? "مسودة" : "Draft")
+    </a>
+    <a asp-action="Index" asp-route-type="@ViewBag.CurrentType" asp-route-status="@InvoiceStatus.Posted"
+       class="px-3 py-1 rounded-full text-xs font-medium border @(ViewBag.CurrentStatus?.ToString() == "Posted" ? "bg-blue-500 text-white border-blue-500" : "bg-white text-blue-700 border-blue-300 hover:bg-blue-50")">
+        @(isRtl ? "مؤكدة" : "Posted")
+    </a>
+    <a asp-action="Index" asp-route-type="@ViewBag.CurrentType" asp-route-status="@InvoiceStatus.PartiallyPaid"
+       class="px-3 py-1 rounded-full text-xs font-medium border @(ViewBag.CurrentStatus?.ToString() == "PartiallyPaid" ? "bg-orange-500 text-white border-orange-500" : "bg-white text-orange-700 border-orange-300 hover:bg-orange-50")">
+        @(isRtl ? "مدفوعة جزئياً" : "Partially Paid")
+    </a>
+    <a asp-action="Index" asp-route-type="@ViewBag.CurrentType" asp-route-status="@InvoiceStatus.Paid"
+       class="px-3 py-1 rounded-full text-xs font-medium border @(ViewBag.CurrentStatus?.ToString() == "Paid" ? "bg-green-500 text-white border-green-500" : "bg-white text-green-700 border-green-300 hover:bg-green-50")">
+        @(isRtl ? "مدفوعة" : "Paid")
+    </a>
+    <a asp-action="Index" asp-route-type="@ViewBag.CurrentType" asp-route-status="@InvoiceStatus.Cancelled"
+       class="px-3 py-1 rounded-full text-xs font-medium border @(ViewBag.CurrentStatus?.ToString() == "Cancelled" ? "bg-red-500 text-white border-red-500" : "bg-white text-red-700 border-red-300 hover:bg-red-50")">
+        @(isRtl ? "ملغاة" : "Cancelled")
+    </a>
+</div>
+
+@if (!Model.Any())
+{
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-12 text-center">
+        <div class="text-gray-400 mb-4">
+            <i class="fas fa-file-invoice text-5xl"></i>
+        </div>
+        <h3 class="text-lg font-medium text-gray-600 mb-2">@(isRtl ? "لا توجد فواتير" : "No invoices found")</h3>
+        <p class="text-gray-400 mb-4">@(isRtl ? "ابدأ بإنشاء فاتورة جديدة" : "Start by creating a new invoice")</p>
+        <a asp-action="Create" asp-route-type="@InvoiceType.CustomerInvoice" class="inline-block bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition">
+            <i class="fas fa-plus me-1"></i> @(isRtl ? "إنشاء فاتورة" : "Create Invoice")
+        </a>
+    </div>
+}
+else
+{
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+                <thead class="bg-gray-50 text-gray-600">
+                    <tr>
+                        <th class="px-4 py-3 text-start">@(isRtl ? "الرقم" : "Number")</th>
+                        <th class="px-4 py-3 text-start">@(isRtl ? "التاريخ" : "Date")</th>
+                        <th class="px-4 py-3 text-start">@(isRtl ? "الشريك" : "Partner")</th>
+                        <th class="px-4 py-3 text-center">@(isRtl ? "النوع" : "Type")</th>
+                        <th class="px-4 py-3 text-end">@(isRtl ? "الإجمالي" : "Total")</th>
+                        <th class="px-4 py-3 text-end">@(isRtl ? "المستحق" : "Amount Due")</th>
+                        <th class="px-4 py-3 text-center">@(isRtl ? "الحالة" : "Status")</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100">
+                    @foreach (var invoice in Model.OrderByDescending(i => i.Date))
+                    {
+                        <tr class="hover:bg-gray-50">
+                            <td class="px-4 py-3">
+                                <a asp-action="Details" asp-route-id="@invoice.Id" class="text-blue-600 hover:underline font-medium">@invoice.Number</a>
+                            </td>
+                            <td class="px-4 py-3 text-gray-600">@invoice.Date.ToString("yyyy-MM-dd")</td>
+                            <td class="px-4 py-3 text-gray-700">@(isRtl ? invoice.PartnerNameAr ?? invoice.PartnerName : invoice.PartnerName)</td>
+                            <td class="px-4 py-3 text-center">
+                                <span class="px-2 py-0.5 rounded-full text-xs font-medium
+                                    @(invoice.InvoiceType == InvoiceType.CustomerInvoice ? "bg-blue-100 text-blue-800" :
+                                      invoice.InvoiceType == InvoiceType.VendorBill ? "bg-orange-100 text-orange-800" :
+                                      invoice.InvoiceType == InvoiceType.CustomerCreditNote ? "bg-purple-100 text-purple-800" :
+                                      "bg-teal-100 text-teal-800")">
+                                    @switch (invoice.InvoiceType)
+                                    {
+                                        case InvoiceType.CustomerInvoice:
+                                            @(isRtl ? "فاتورة عميل" : "Invoice")
+                                            break;
+                                        case InvoiceType.VendorBill:
+                                            @(isRtl ? "فاتورة مورد" : "Bill")
+                                            break;
+                                        case InvoiceType.CustomerCreditNote:
+                                            @(isRtl ? "إشعار دائن" : "Credit Note")
+                                            break;
+                                        case InvoiceType.VendorDebitNote:
+                                            @(isRtl ? "إشعار مدين" : "Debit Note")
+                                            break;
+                                    }
+                                </span>
+                            </td>
+                            <td class="px-4 py-3 text-end font-mono font-medium">@invoice.Total.ToString("N2")</td>
+                            <td class="px-4 py-3 text-end font-mono @(invoice.AmountDue > 0 ? "text-red-600 font-medium" : "text-gray-500")">@invoice.AmountDue.ToString("N2")</td>
+                            <td class="px-4 py-3 text-center">
+                                <span class="px-2 py-0.5 rounded-full text-xs font-medium
+                                    @(invoice.Status == InvoiceStatus.Draft ? "bg-yellow-100 text-yellow-800" :
+                                      invoice.Status == InvoiceStatus.Posted ? "bg-blue-100 text-blue-800" :
+                                      invoice.Status == InvoiceStatus.PartiallyPaid ? "bg-orange-100 text-orange-800" :
+                                      invoice.Status == InvoiceStatus.Paid ? "bg-green-100 text-green-800" :
+                                      "bg-red-100 text-red-800")">
+                                    @switch (invoice.Status)
+                                    {
+                                        case InvoiceStatus.Draft:
+                                            @(isRtl ? "مسودة" : "Draft")
+                                            break;
+                                        case InvoiceStatus.Posted:
+                                            @(isRtl ? "مؤكدة" : "Posted")
+                                            break;
+                                        case InvoiceStatus.PartiallyPaid:
+                                            @(isRtl ? "مدفوعة جزئياً" : "Partially Paid")
+                                            break;
+                                        case InvoiceStatus.Paid:
+                                            @(isRtl ? "مدفوعة" : "Paid")
+                                            break;
+                                        case InvoiceStatus.Cancelled:
+                                            @(isRtl ? "ملغاة" : "Cancelled")
+                                            break;
+                                    }
+                                </span>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+}

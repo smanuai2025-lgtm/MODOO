@@ -1,0 +1,31 @@
+@{
+    ViewData["Title"] = "Error";
+    var code = Context.Request.Query["code"].FirstOrDefault() ?? "500";
+    var isRtl = CultureInfo.CurrentCulture.TextInfo.IsRightToLeft;
+}
+
+<div class="flex items-center justify-center min-h-[60vh]">
+    <div class="text-center">
+        <h1 class="text-8xl font-bold text-gray-300">@code</h1>
+        <p class="text-xl text-gray-600 mt-4">
+            @switch (code)
+            {
+                case "404":
+                    @(isRtl ? "الصفحة غير موجودة" : "Page not found")
+                    break;
+                case "403":
+                    @(isRtl ? "غير مصرح لك بالوصول" : "Access denied")
+                    break;
+                case "400":
+                    @(isRtl ? "طلب غير صالح" : "Bad request")
+                    break;
+                default:
+                    @(isRtl ? "حدث خطأ غير متوقع" : "An unexpected error occurred")
+                    break;
+            }
+        </p>
+        <a href="/" class="inline-block mt-6 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
+            <i class="fas fa-home me-2"></i>@(isRtl ? "العودة للرئيسية" : "Go Home")
+        </a>
+    </div>
+</div>

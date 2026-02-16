@@ -1,0 +1,61 @@
+@model IEnumerable<FiscalYear>
+
+@{
+    ViewData["Title"] = "السنوات المالية | Fiscal Years";
+    var isRtl = System.Globalization.CultureInfo.CurrentCulture.Name.StartsWith("ar");
+}
+
+<div class="flex items-center justify-between mb-6">
+    <h1 class="text-2xl font-bold text-gray-800">@(isRtl ? "السنوات المالية" : "Fiscal Years")</h1>
+    <a asp-action="Create" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition">
+        <i class="fas fa-plus me-1"></i> @(isRtl ? "سنة جديدة" : "New Year")
+    </a>
+</div>
+
+@foreach (var year in Model.OrderByDescending(y => y.StartDate))
+{
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200 mb-6 overflow-hidden">
+        <div class="flex items-center justify-between px-6 py-4 bg-gray-50 border-b border-gray-200">
+            <div>
+                <h2 class="font-bold text-gray-800 text-lg">@year.Name</h2>
+                <p class="text-sm text-gray-500">@year.StartDate.ToString("yyyy-MM-dd") → @year.EndDate.ToString("yyyy-MM-dd")</p>
+            </div>
+            <div class="flex items-center gap-3">
+                <span class="px-3 py-1 rounded-full text-sm font-medium @(year.IsClosed ? "bg-red-100 text-red-800" : "bg-green-100 text-green-800")">
+                    @(year.IsClosed ? (isRtl ? "مغلقة" : "Closed") : (isRtl ? "مفتوحة" : "Open"))
+                </span>
+                @if (!year.IsClosed)
+                {
+                    <form asp-action="CloseYear" asp-route-id="@year.Id" method="post" onsubmit="return confirm('@(isRtl ? "هل أنت متأكد من إغلاق السنة المالية؟" : "Are you sure you want to close this fiscal year?")')">
+                        <button type="submit" class="text-red-600 hover:text-red-800 text-sm font-medium">
+                            <i class="fas fa-lock me-1"></i> @(isRtl ? "إغلاق السنة" : "Close Year")
+                        </button>
+                    </form>
+                }
+            </div>
+        </div>
+        <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3 p-4">
+            @if (year.Periods != null)
+            {
+                @foreach (var period in year.Periods.OrderBy(p => p.StartDate))
+                {
+                    <div class="border border-gray-200 rounded-lg p-3 @(period.IsClosed ? "bg-gray-50" : "bg-white")">
+                        <div class="flex items-center justify-between mb-1">
+                            <span class="font-medium text-sm text-gray-700">@period.Name</span>
+                            <span class="w-2 h-2 rounded-full @(period.IsClosed ? "bg-red-400" : "bg-green-400")"></span>
+                        </div>
+                        <p class="text-xs text-gray-500">@period.StartDate.ToString("MM/dd") - @period.EndDate.ToString("MM/dd")</p>
+                        @if (!period.IsClosed && !year.IsClosed)
+                        {
+                            <form asp-action="ClosePeriod" asp-route-id="@period.Id" method="post" class="mt-2">
+                                <button type="submit" class="text-xs text-red-600 hover:text-red-800">
+                                    <i class="fas fa-lock me-1"></i> @(isRtl ? "إغلاق" : "Close")
+                                </button>
+                            </form>
+                        }
+                    </div>
+                }
+            }
+        </div>
+    </div>
+}

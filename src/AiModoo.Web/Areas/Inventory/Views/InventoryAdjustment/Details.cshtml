@@ -1,0 +1,96 @@
+@model InventoryAdjustment
+@{
+    ViewData["Title"] = Model.Name;
+    var isRtl = CultureInfo.CurrentCulture.TextInfo.IsRightToLeft;
+    var statusColor = Model.Status switch { InventoryAdjustmentStatus.Validated => "green", InventoryAdjustmentStatus.Cancelled => "red", InventoryAdjustmentStatus.InProgress => "blue", _ => "yellow" };
+    var statusText = Model.Status switch { InventoryAdjustmentStatus.Draft => isRtl ? "مسودة" : "Draft", InventoryAdjustmentStatus.InProgress => isRtl ? "قيد الجرد" : "In Progress", InventoryAdjustmentStatus.Validated => isRtl ? "تم التحقق" : "Validated", InventoryAdjustmentStatus.Cancelled => isRtl ? "ملغي" : "Cancelled", _ => Model.Status.ToString() };
+}
+
+<div class="space-y-6">
+    @if (TempData["Success"] != null)
+    {
+        <div class="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg">@TempData["Success"]</div>
+    }
+    @if (TempData["Error"] != null)
+    {
+        <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">@TempData["Error"]</div>
+    }
+
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div class="flex items-center gap-4">
+            <a href="/Inventory/InventoryAdjustment" class="text-slate-400 hover:text-slate-600"><i class="fas fa-arrow-left"></i></a>
+            <div>
+                <div class="flex items-center gap-3">
+                    <h1 class="text-2xl font-bold text-slate-800">@Model.Name</h1>
+                    <span class="px-3 py-1 rounded-full text-sm bg-@(statusColor)-100 text-@(statusColor)-700">@statusText</span>
+                </div>
+                <p class="text-slate-500">@(Model.Warehouse?.Name ?? "") @Model.Date.ToString("yyyy-MM-dd")</p>
+            </div>
+        </div>
+        <div class="flex gap-2">
+            @if (Model.Status == InventoryAdjustmentStatus.Draft)
+            {
+                <form method="post" asp-action="StartCount" asp-route-id="@Model.Id">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm">
+                        <i class="fas fa-clipboard-list"></i> @(isRtl ? "بدء الجرد" : "Start Count")
+                    </button>
+                </form>
+            }
+            @if (Model.Status == InventoryAdjustmentStatus.Draft || Model.Status == InventoryAdjustmentStatus.InProgress)
+            {
+                <form method="post" asp-action="Validate" asp-route-id="@Model.Id">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm">
+                        <i class="fas fa-check-double"></i> @(isRtl ? "تأكيد التسوية" : "Validate")
+                    </button>
+                </form>
+                <form method="post" asp-action="Cancel" asp-route-id="@Model.Id">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="bg-red-100 hover:bg-red-200 text-red-700 px-4 py-2 rounded-lg text-sm">
+                        <i class="fas fa-times"></i> @(isRtl ? "إلغاء" : "Cancel")
+                    </button>
+                </form>
+            }
+        </div>
+    </div>
+
+    <!-- Lines -->
+    <div class="bg-white rounded-xl shadow-sm border p-6">
+        <h2 class="text-lg font-semibold mb-4 border-b pb-2">@(isRtl ? "سطور التسوية" : "Adjustment Lines")</h2>
+        <table class="w-full text-sm">
+            <thead class="bg-slate-50">
+                <tr>
+                    <th class="px-4 py-2 text-start">@(isRtl ? "المنتج" : "Product")</th>
+                    <th class="px-4 py-2 text-start">@(isRtl ? "الوحدة" : "UoM")</th>
+                    <th class="px-4 py-2 text-end">@(isRtl ? "الكمية النظرية" : "Theoretical")</th>
+                    <th class="px-4 py-2 text-end">@(isRtl ? "الكمية الفعلية" : "Real")</th>
+                    <th class="px-4 py-2 text-end">@(isRtl ? "الفرق" : "Difference")</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y">
+                @if (Model.Lines != null)
+                {
+                    @foreach (var line in Model.Lines)
+                    {
+                        var diff = line.RealQty - line.TheoreticalQty;
+                        var diffColor = diff > 0 ? "text-green-600" : diff < 0 ? "text-red-600" : "text-slate-500";
+                        <tr>
+                            <td class="px-4 py-2">
+                                <a href="/Inventory/Product/Details/@line.ProductId" class="text-purple-600 hover:underline">
+                                    @(isRtl && !string.IsNullOrEmpty(line.Product?.NameAr) ? line.Product.NameAr : line.Product?.Name)
+                                </a>
+                            </td>
+                            <td class="px-4 py-2 text-slate-500">@(line.Product?.Uom?.Name ?? "-")</td>
+                            <td class="px-4 py-2 text-end">@line.TheoreticalQty.ToString("N2")</td>
+                            <td class="px-4 py-2 text-end font-medium">@line.RealQty.ToString("N2")</td>
+                            <td class="px-4 py-2 text-end font-bold @diffColor">
+                                @(diff > 0 ? "+" : "")@diff.ToString("N2")
+                            </td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

@@ -1,0 +1,157 @@
+@model IEnumerable<Partner>
+@{
+    ViewData["Title"] = "Partners";
+    var isRtl = CultureInfo.CurrentCulture.TextInfo.IsRightToLeft;
+}
+
+<div class="space-y-6">
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+            <h1 class="text-2xl font-bold text-slate-800">@(isRtl ? "الشركاء" : "Partners")</h1>
+            <p class="text-slate-500 mt-1">@(isRtl ? "إدارة العملاء والموردين" : "Manage customers and vendors")</p>
+        </div>
+        <div class="flex gap-2">
+            <a href="/Sales/Partner/Create?type=1" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg flex items-center gap-2">
+                <i class="fas fa-plus"></i>
+                @(isRtl ? "عميل جديد" : "New Customer")
+            </a>
+            <a href="/Sales/Partner/Create?type=2" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2">
+                <i class="fas fa-plus"></i>
+                @(isRtl ? "مورد جديد" : "New Vendor")
+            </a>
+        </div>
+    </div>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg">@TempData["Success"]</div>
+    }
+    @if (TempData["Error"] != null)
+    {
+        <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">@TempData["Error"]</div>
+    }
+
+    <!-- Filters -->
+    <div class="bg-white rounded-xl shadow-sm border p-4">
+        <form method="get" class="flex flex-wrap gap-4 items-end">
+            <div>
+                <label class="block text-sm text-slate-600 mb-1">@(isRtl ? "البحث" : "Search")</label>
+                <input type="text" name="search" value="@ViewBag.CurrentSearch" class="border rounded-lg px-3 py-2 text-sm w-48" placeholder="@(isRtl ? "بحث..." : "Search...")" />
+            </div>
+            <div>
+                <label class="block text-sm text-slate-600 mb-1">@(isRtl ? "النوع" : "Type")</label>
+                <select name="type" class="border rounded-lg px-3 py-2 text-sm">
+                    <option value="">@(isRtl ? "الكل" : "All")</option>
+                    <option value="1" selected="@(ViewBag.CurrentType != null && (int)ViewBag.CurrentType == 1)">@(isRtl ? "عميل" : "Customer")</option>
+                    <option value="2" selected="@(ViewBag.CurrentType != null && (int)ViewBag.CurrentType == 2)">@(isRtl ? "مورد" : "Vendor")</option>
+                </select>
+            </div>
+            <button type="submit" class="bg-slate-100 hover:bg-slate-200 px-4 py-2 rounded-lg text-sm">
+                <i class="fas fa-filter"></i> @(isRtl ? "تصفية" : "Filter")
+            </button>
+        </form>
+    </div>
+
+    <!-- Stats -->
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div class="bg-white rounded-xl shadow-sm border p-4">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+                    <i class="fas fa-users text-green-600"></i>
+                </div>
+                <div>
+                    <p class="text-sm text-slate-500">@(isRtl ? "العملاء" : "Customers")</p>
+                    <p class="text-xl font-bold text-slate-800">@Model.Count(p => p.PartnerType == PartnerType.Customer)</p>
+                </div>
+            </div>
+        </div>
+        <div class="bg-white rounded-xl shadow-sm border p-4">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                    <i class="fas fa-truck text-blue-600"></i>
+                </div>
+                <div>
+                    <p class="text-sm text-slate-500">@(isRtl ? "الموردين" : "Vendors")</p>
+                    <p class="text-xl font-bold text-slate-800">@Model.Count(p => p.PartnerType == PartnerType.Vendor)</p>
+                </div>
+            </div>
+        </div>
+        <div class="bg-white rounded-xl shadow-sm border p-4">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
+                    <i class="fas fa-chart-line text-purple-600"></i>
+                </div>
+                <div>
+                    <p class="text-sm text-slate-500">@(isRtl ? "إجمالي الطلبات" : "Total Orders")</p>
+                    <p class="text-xl font-bold text-slate-800">@Model.Sum(p => p.SalesOrders.Count)</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Partners Table -->
+    <div class="bg-white rounded-xl shadow-sm border overflow-hidden">
+        <table class="w-full text-sm">
+            <thead class="bg-slate-50 text-slate-600">
+                <tr>
+                    <th class="px-4 py-3 text-start">@(isRtl ? "الاسم" : "Name")</th>
+                    <th class="px-4 py-3 text-start">@(isRtl ? "النوع" : "Type")</th>
+                    <th class="px-4 py-3 text-start">@(isRtl ? "البريد" : "Email")</th>
+                    <th class="px-4 py-3 text-start">@(isRtl ? "الهاتف" : "Phone")</th>
+                    <th class="px-4 py-3 text-start">@(isRtl ? "المدينة" : "City")</th>
+                    <th class="px-4 py-3 text-center">@(isRtl ? "الطلبات" : "Orders")</th>
+                    <th class="px-4 py-3 text-center">@(isRtl ? "الحالة" : "Status")</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y">
+                @foreach (var partner in Model)
+                {
+                    <tr class="hover:bg-slate-50 cursor-pointer" onclick="window.location='/Sales/Partner/Details/@partner.Id'">
+                        <td class="px-4 py-3">
+                            <div class="flex items-center gap-3">
+                                <div class="w-8 h-8 rounded-full bg-@(partner.PartnerType == PartnerType.Customer ? "green" : "blue")-100 flex items-center justify-center">
+                                    <i class="fas fa-@(partner.IsCompany ? "building" : "user") text-@(partner.PartnerType == PartnerType.Customer ? "green" : "blue")-600 text-xs"></i>
+                                </div>
+                                <div>
+                                    <div class="font-medium">@(isRtl && !string.IsNullOrEmpty(partner.NameAr) ? partner.NameAr : partner.Name)</div>
+                                    @if (!string.IsNullOrEmpty(partner.TaxNumber))
+                                    {
+                                        <div class="text-xs text-slate-400">@(isRtl ? "رقم ضريبي:" : "Tax:") @partner.TaxNumber</div>
+                                    }
+                                </div>
+                            </div>
+                        </td>
+                        <td class="px-4 py-3">
+                            @{
+                                var typeColor = partner.PartnerType == PartnerType.Customer ? "green" : "blue";
+                                var typeName = partner.PartnerType == PartnerType.Customer ? (isRtl ? "عميل" : "Customer") : (isRtl ? "مورد" : "Vendor");
+                            }
+                            <span class="px-2 py-1 rounded-full text-xs bg-@(typeColor)-100 text-@(typeColor)-700">@typeName</span>
+                        </td>
+                        <td class="px-4 py-3 text-slate-600">@partner.Email</td>
+                        <td class="px-4 py-3 text-slate-600">@partner.Phone</td>
+                        <td class="px-4 py-3 text-slate-600">@partner.City</td>
+                        <td class="px-4 py-3 text-center font-medium">@partner.SalesOrders.Count</td>
+                        <td class="px-4 py-3 text-center">
+                            @if (partner.IsActive)
+                            {
+                                <span class="px-2 py-1 rounded-full text-xs bg-green-100 text-green-700">@(isRtl ? "نشط" : "Active")</span>
+                            }
+                            else
+                            {
+                                <span class="px-2 py-1 rounded-full text-xs bg-red-100 text-red-700">@(isRtl ? "غير نشط" : "Inactive")</span>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+        @if (!Model.Any())
+        {
+            <div class="text-center py-12 text-slate-400">
+                <i class="fas fa-user-plus text-4xl mb-3"></i>
+                <p>@(isRtl ? "لا يوجد شركاء" : "No partners found")</p>
+            </div>
+        }
+    </div>
+</div>

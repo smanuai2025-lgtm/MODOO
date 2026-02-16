@@ -1,0 +1,52 @@
+@{
+    ViewData["Title"] = "استيراد كشف بنك | Import Bank Statement";
+    var isRtl = System.Globalization.CultureInfo.CurrentCulture.Name.StartsWith("ar");
+}
+
+<div class="max-w-xl mx-auto">
+    <div class="flex items-center mb-6">
+        <a asp-action="Index" class="text-gray-500 hover:text-gray-700 me-3"><i class="fas fa-arrow-left"></i></a>
+        <h1 class="text-2xl font-bold text-gray-800">@(isRtl ? "استيراد كشف بنك" : "Import Bank Statement")</h1>
+    </div>
+
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+        <form asp-action="Import" method="post" enctype="multipart/form-data">
+            @Html.AntiForgeryToken()
+            <div asp-validation-summary="All" class="text-red-500 text-sm mb-4"></div>
+
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-1">
+                    @(isRtl ? "الحساب البنكي" : "Bank Account") *
+                </label>
+                <select name="bankAccountId" asp-items="ViewBag.BankAccounts"
+                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" required>
+                    <option value="">@(isRtl ? "اختر الحساب البنكي" : "Select Bank Account")</option>
+                </select>
+            </div>
+
+            <div class="mb-6">
+                <label class="block text-sm font-medium text-gray-700 mb-1">
+                    @(isRtl ? "ملف CSV" : "CSV File") *
+                </label>
+                <div class="relative">
+                    <input type="file" name="csvFile" accept=".csv"
+                           class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500
+                                  file:mr-4 file:py-1 file:px-3 file:rounded-md file:border-0 file:text-sm file:font-medium
+                                  file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100" required />
+                </div>
+                <p class="mt-1 text-xs text-gray-500">
+                    @(isRtl ? "يُقبل فقط ملفات CSV (.csv)" : "Only CSV files (.csv) are accepted")
+                </p>
+            </div>
+
+            <div class="flex justify-end gap-3">
+                <a asp-action="Index" class="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">
+                    @(isRtl ? "إلغاء" : "Cancel")
+                </a>
+                <button type="submit" class="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">
+                    <i class="fas fa-file-import me-1"></i> @(isRtl ? "استيراد" : "Import")
+                </button>
+            </div>
+        </form>
+    </div>
+</div>

@@ -1,0 +1,45 @@
+@model AccountDto
+
+<li>
+    <div class="flex items-center gap-2 py-1.5 px-2 rounded hover:bg-gray-50 group">
+        @if (Model.ChildAccounts != null && Model.ChildAccounts.Any())
+        {
+            <button onclick="this.closest('li').querySelector('ul')?.classList.toggle('hidden')" class="text-gray-400 hover:text-gray-600 w-5">
+                <i class="fas fa-chevron-down text-xs"></i>
+            </button>
+        }
+        else
+        {
+            <span class="w-5"></span>
+        }
+        <span class="font-mono text-sm text-blue-600 font-medium">@Model.Code</span>
+        <span class="text-sm font-medium text-gray-700">@Model.Name</span>
+        @if (!string.IsNullOrEmpty(Model.NameAr))
+        {
+            <span class="text-sm text-gray-500">(@Model.NameAr)</span>
+        }
+        <span class="ms-auto text-xs px-2 py-0.5 rounded-full
+            @(Model.AccountType == AccountTypeEnum.Asset ? "bg-blue-100 text-blue-800" :
+              Model.AccountType == AccountTypeEnum.Liability ? "bg-red-100 text-red-800" :
+              Model.AccountType == AccountTypeEnum.Equity ? "bg-purple-100 text-purple-800" :
+              Model.AccountType == AccountTypeEnum.Revenue ? "bg-green-100 text-green-800" :
+              "bg-orange-100 text-orange-800")">
+            @Model.AccountType
+        </span>
+        <span class="font-mono text-sm font-medium @(Model.Balance >= 0 ? "text-green-600" : "text-red-600")">
+            @Model.Balance.ToString("N2")
+        </span>
+        <a asp-action="Edit" asp-route-id="@Model.Id" class="text-blue-600 hover:text-blue-800 opacity-0 group-hover:opacity-100 transition">
+            <i class="fas fa-edit text-xs"></i>
+        </a>
+    </div>
+    @if (Model.ChildAccounts != null && Model.ChildAccounts.Any())
+    {
+        <ul class="ms-6 border-s border-gray-200 space-y-0.5">
+            @foreach (var child in Model.ChildAccounts)
+            {
+                await Html.RenderPartialAsync("_AccountTreeNode", child);
+            }
+        </ul>
+    }
+</li>

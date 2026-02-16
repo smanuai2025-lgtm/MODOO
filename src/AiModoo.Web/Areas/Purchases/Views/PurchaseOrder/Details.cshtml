@@ -1,0 +1,209 @@
+@model PurchaseOrder
+@{
+    ViewData["Title"] = Model.Number;
+    var isRtl = CultureInfo.CurrentCulture.TextInfo.IsRightToLeft;
+}
+
+<div class="space-y-6">
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div class="flex items-center gap-4">
+            <a href="/Purchases/PurchaseOrder" class="text-slate-400 hover:text-slate-600"><i class="fas fa-arrow-@(isRtl ? "right" : "left") text-lg"></i></a>
+            <div>
+                <h1 class="text-2xl font-bold text-slate-800">@Model.Number</h1>
+                <p class="text-slate-500 mt-1">
+                    @{
+                        var sc = Model.Status switch { PurchaseOrderStatus.RFQ => "amber", PurchaseOrderStatus.RFQSent => "blue", PurchaseOrderStatus.PurchaseOrder => "emerald", PurchaseOrderStatus.Done => "slate", PurchaseOrderStatus.Cancelled => "red", _ => "slate" };
+                        var sn = Model.Status switch { PurchaseOrderStatus.RFQ => isRtl ? "طلب عرض سعر" : "RFQ", PurchaseOrderStatus.RFQSent => isRtl ? "مرسل" : "Sent", PurchaseOrderStatus.PurchaseOrder => isRtl ? "أمر شراء" : "Purchase Order", PurchaseOrderStatus.Done => isRtl ? "منتهي" : "Done", PurchaseOrderStatus.Cancelled => isRtl ? "ملغي" : "Cancelled", _ => "" };
+                    }
+                    <span class="px-3 py-1 rounded-full text-sm bg-@(sc)-100 text-@(sc)-700 font-medium">@sn</span>
+                </p>
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="flex flex-wrap gap-2">
+            @if (Model.Status == PurchaseOrderStatus.RFQ || Model.Status == PurchaseOrderStatus.RFQSent)
+            {
+                <form method="post" asp-action="Confirm" asp-route-id="@Model.Id" class="inline">
+                    <button type="submit" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm">
+                        <i class="fas fa-check"></i> @(isRtl ? "تأكيد الأمر" : "Confirm Order")
+                    </button>
+                </form>
+            }
+
+            @if (Model.Status == PurchaseOrderStatus.PurchaseOrder && !Model.ReceiptPickingId.HasValue)
+            {
+                <form method="post" asp-action="CreateReceipt" asp-route-id="@Model.Id" class="inline">
+                    <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm">
+                        <i class="fas fa-dolly"></i> @(isRtl ? "إنشاء استلام" : "Create Receipt")
+                    </button>
+                </form>
+            }
+
+            @if (Model.Status == PurchaseOrderStatus.PurchaseOrder && !Model.BillId.HasValue)
+            {
+                <form method="post" asp-action="CreateBill" asp-route-id="@Model.Id" class="inline">
+                    <button type="submit" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg text-sm">
+                        <i class="fas fa-file-invoice-dollar"></i> @(isRtl ? "إنشاء فاتورة مورد" : "Create Bill")
+                    </button>
+                </form>
+            }
+
+            @if (Model.Status != PurchaseOrderStatus.Done && Model.Status != PurchaseOrderStatus.Cancelled)
+            {
+                <form method="post" asp-action="Cancel" asp-route-id="@Model.Id" class="inline">
+                    <button type="submit" class="bg-red-100 hover:bg-red-200 text-red-700 px-4 py-2 rounded-lg text-sm" onclick="return confirm('@(isRtl ? "هل أنت متأكد من الإلغاء؟" : "Are you sure?")')">
+                        <i class="fas fa-times"></i> @(isRtl ? "إلغاء" : "Cancel")
+                    </button>
+                </form>
+            }
+        </div>
+    </div>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg">@TempData["Success"]</div>
+    }
+    @if (TempData["Error"] != null)
+    {
+        <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">@TempData["Error"]</div>
+    }
+
+    <!-- Info Cards -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div class="bg-white rounded-xl shadow-sm border p-6">
+            <h2 class="text-lg font-semibold text-slate-700 mb-4"><i class="fas fa-info-circle text-slate-400 me-2"></i>@(isRtl ? "معلومات الأمر" : "Order Info")</h2>
+            <div class="space-y-3 text-sm">
+                <div class="flex justify-between"><span class="text-slate-500">@(isRtl ? "المورد" : "Vendor")</span>
+                    <a href="/Sales/Partner/Details/@Model.VendorId" class="text-blue-600 hover:underline">@(isRtl && !string.IsNullOrEmpty(Model.Vendor.NameAr) ? Model.Vendor.NameAr : Model.Vendor.Name)</a>
+                </div>
+                <div class="flex justify-between"><span class="text-slate-500">@(isRtl ? "تاريخ الطلب" : "Order Date")</span><span>@Model.OrderDate.ToString("yyyy-MM-dd")</span></div>
+                @if (Model.ConfirmationDate.HasValue)
+                {
+                    <div class="flex justify-between"><span class="text-slate-500">@(isRtl ? "تاريخ التأكيد" : "Confirmation")</span><span>@Model.ConfirmationDate.Value.ToString("yyyy-MM-dd")</span></div>
+                }
+                @if (Model.ReceiptDate.HasValue)
+                {
+                    <div class="flex justify-between"><span class="text-slate-500">@(isRtl ? "تاريخ الاستلام" : "Receipt Date")</span><span>@Model.ReceiptDate.Value.ToString("yyyy-MM-dd")</span></div>
+                }
+                @if (Model.PaymentTerm != null)
+                {
+                    <div class="flex justify-between"><span class="text-slate-500">@(isRtl ? "شروط الدفع" : "Payment Term")</span><span>@Model.PaymentTerm.Name</span></div>
+                }
+                @if (!string.IsNullOrEmpty(Model.VendorReference))
+                {
+                    <div class="flex justify-between"><span class="text-slate-500">@(isRtl ? "مرجع المورد" : "Vendor Ref")</span><span>@Model.VendorReference</span></div>
+                }
+            </div>
+        </div>
+
+        <!-- Linked Docs -->
+        <div class="bg-white rounded-xl shadow-sm border p-6">
+            <h2 class="text-lg font-semibold text-slate-700 mb-4"><i class="fas fa-link text-slate-400 me-2"></i>@(isRtl ? "المستندات المرتبطة" : "Linked Documents")</h2>
+            <div class="space-y-4">
+                @if (Model.ReceiptPicking != null)
+                {
+                    <a href="/Inventory/StockPicking/Details/@Model.ReceiptPickingId" class="flex items-center gap-3 p-3 bg-blue-50 rounded-lg hover:bg-blue-100 transition">
+                        <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center"><i class="fas fa-dolly text-blue-600"></i></div>
+                        <div>
+                            <p class="font-medium text-blue-700">@Model.ReceiptPicking.Name</p>
+                            <p class="text-xs text-blue-500">@(isRtl ? "إيصال الاستلام" : "Receipt") - @Model.ReceiptPicking.Status</p>
+                        </div>
+                    </a>
+                }
+                else if (Model.Status == PurchaseOrderStatus.PurchaseOrder)
+                {
+                    <div class="flex items-center gap-3 p-3 bg-slate-50 rounded-lg">
+                        <div class="w-10 h-10 bg-slate-100 rounded-lg flex items-center justify-center"><i class="fas fa-dolly text-slate-400"></i></div>
+                        <p class="text-slate-500">@(isRtl ? "لم يتم إنشاء الاستلام بعد" : "No receipt created yet")</p>
+                    </div>
+                }
+
+                @if (Model.Bill != null)
+                {
+                    <a href="/Accounting/Invoice/Details/@Model.BillId" class="flex items-center gap-3 p-3 bg-purple-50 rounded-lg hover:bg-purple-100 transition">
+                        <div class="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center"><i class="fas fa-file-invoice-dollar text-purple-600"></i></div>
+                        <div>
+                            <p class="font-medium text-purple-700">@Model.Bill.Number</p>
+                            <p class="text-xs text-purple-500">@(isRtl ? "فاتورة المورد" : "Vendor Bill") - @Model.Bill.Status</p>
+                        </div>
+                    </a>
+                }
+                else if (Model.Status == PurchaseOrderStatus.PurchaseOrder)
+                {
+                    <div class="flex items-center gap-3 p-3 bg-slate-50 rounded-lg">
+                        <div class="w-10 h-10 bg-slate-100 rounded-lg flex items-center justify-center"><i class="fas fa-file-invoice-dollar text-slate-400"></i></div>
+                        <p class="text-slate-500">@(isRtl ? "لم يتم إنشاء الفاتورة بعد" : "No bill created yet")</p>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+
+    <!-- Order Lines -->
+    <div class="bg-white rounded-xl shadow-sm border overflow-hidden">
+        <div class="px-6 py-4 border-b">
+            <h2 class="text-lg font-semibold text-slate-700">@(isRtl ? "بنود الشراء" : "Purchase Lines")</h2>
+        </div>
+        <table class="w-full text-sm">
+            <thead class="bg-slate-50 text-slate-600">
+                <tr>
+                    <th class="px-4 py-3 text-start">#</th>
+                    <th class="px-4 py-3 text-start">@(isRtl ? "المنتج" : "Product")</th>
+                    <th class="px-4 py-3 text-end">@(isRtl ? "الكمية" : "Qty")</th>
+                    <th class="px-4 py-3 text-end">@(isRtl ? "مستلم" : "Received")</th>
+                    <th class="px-4 py-3 text-end">@(isRtl ? "مفوتر" : "Billed")</th>
+                    <th class="px-4 py-3 text-end">@(isRtl ? "سعر الوحدة" : "Unit Price")</th>
+                    <th class="px-4 py-3 text-end">@(isRtl ? "خصم" : "Discount")</th>
+                    <th class="px-4 py-3 text-end">@(isRtl ? "الإجمالي الفرعي" : "Subtotal")</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y">
+                @foreach (var line in Model.Lines.OrderBy(l => l.Sequence))
+                {
+                    <tr class="hover:bg-slate-50">
+                        <td class="px-4 py-3 text-slate-400">@line.Sequence</td>
+                        <td class="px-4 py-3">
+                            <div class="font-medium">@(isRtl && !string.IsNullOrEmpty(line.DescriptionAr) ? line.DescriptionAr : line.Description)</div>
+                        </td>
+                        <td class="px-4 py-3 text-end">@line.Quantity.ToString("N2")</td>
+                        <td class="px-4 py-3 text-end @(line.ReceivedQty >= line.Quantity ? "text-green-600" : "text-orange-600")">@line.ReceivedQty.ToString("N2")</td>
+                        <td class="px-4 py-3 text-end @(line.BilledQty >= line.Quantity ? "text-green-600" : "text-orange-600")">@line.BilledQty.ToString("N2")</td>
+                        <td class="px-4 py-3 text-end">@line.UnitPrice.ToString("N2")</td>
+                        <td class="px-4 py-3 text-end">@(line.Discount > 0 ? line.Discount.ToString("N1") + "%" : "-")</td>
+                        <td class="px-4 py-3 text-end font-medium">@line.SubTotal.ToString("N2")</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+
+        <!-- Totals -->
+        <div class="border-t px-6 py-4">
+            <div class="flex flex-col items-end gap-2 text-sm">
+                <div class="flex gap-8">
+                    <span class="text-slate-500">@(isRtl ? "الإجمالي الفرعي" : "Subtotal")</span>
+                    <span class="font-medium w-32 text-end">@Model.SubTotal.ToString("N2")</span>
+                </div>
+                @if (Model.TaxTotal > 0)
+                {
+                    <div class="flex gap-8">
+                        <span class="text-slate-500">@(isRtl ? "الضريبة" : "Tax")</span>
+                        <span class="font-medium w-32 text-end">@Model.TaxTotal.ToString("N2")</span>
+                    </div>
+                }
+                <div class="flex gap-8 text-lg border-t pt-2">
+                    <span class="font-semibold text-slate-700">@(isRtl ? "الإجمالي" : "Total")</span>
+                    <span class="font-bold w-32 text-end text-orange-600">@Model.Total.ToString("N2")</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @if (!string.IsNullOrEmpty(Model.Notes))
+    {
+        <div class="bg-white rounded-xl shadow-sm border p-6">
+            <h2 class="text-lg font-semibold text-slate-700 mb-2">@(isRtl ? "ملاحظات" : "Notes")</h2>
+            <p class="text-sm text-slate-600">@Model.Notes</p>
+        </div>
+    }
+</div>

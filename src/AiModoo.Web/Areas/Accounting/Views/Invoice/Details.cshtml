@@ -1,0 +1,345 @@
+@model Invoice
+
+@{
+    ViewData["Title"] = $"فاتورة {Model.Number} | Invoice {Model.Number}";
+    var isRtl = System.Globalization.CultureInfo.CurrentCulture.Name.StartsWith("ar");
+}
+
+<!-- Header -->
+<div class="flex items-center justify-between mb-6">
+    <div class="flex items-center gap-3">
+        <a asp-action="Index" class="text-gray-500 hover:text-gray-700"><i class="fas fa-arrow-left"></i></a>
+        <div>
+            <h1 class="text-2xl font-bold text-gray-800">@Model.Number</h1>
+            <p class="text-sm text-gray-500">
+                @switch (Model.InvoiceType)
+                {
+                    case InvoiceType.CustomerInvoice:
+                        @(isRtl ? "فاتورة عميل" : "Customer Invoice")
+                        break;
+                    case InvoiceType.VendorBill:
+                        @(isRtl ? "فاتورة مورد" : "Vendor Bill")
+                        break;
+                    case InvoiceType.CustomerCreditNote:
+                        @(isRtl ? "إشعار دائن" : "Credit Note")
+                        break;
+                    case InvoiceType.VendorDebitNote:
+                        @(isRtl ? "إشعار مدين" : "Debit Note")
+                        break;
+                }
+            </p>
+        </div>
+        <!-- Type Badge -->
+        <span class="px-3 py-1 rounded-full text-sm font-medium
+            @(Model.InvoiceType == InvoiceType.CustomerInvoice ? "bg-blue-100 text-blue-800" :
+              Model.InvoiceType == InvoiceType.VendorBill ? "bg-orange-100 text-orange-800" :
+              Model.InvoiceType == InvoiceType.CustomerCreditNote ? "bg-purple-100 text-purple-800" :
+              "bg-teal-100 text-teal-800")">
+            @Model.InvoiceType
+        </span>
+        <!-- Status Badge -->
+        <span class="px-3 py-1 rounded-full text-sm font-medium
+            @(Model.Status == InvoiceStatus.Draft ? "bg-yellow-100 text-yellow-800" :
+              Model.Status == InvoiceStatus.Posted ? "bg-blue-100 text-blue-800" :
+              Model.Status == InvoiceStatus.PartiallyPaid ? "bg-orange-100 text-orange-800" :
+              Model.Status == InvoiceStatus.Paid ? "bg-green-100 text-green-800" :
+              "bg-red-100 text-red-800")">
+            @switch (Model.Status)
+            {
+                case InvoiceStatus.Draft:
+                    @(isRtl ? "مسودة" : "Draft")
+                    break;
+                case InvoiceStatus.Posted:
+                    @(isRtl ? "مؤكدة" : "Posted")
+                    break;
+                case InvoiceStatus.PartiallyPaid:
+                    @(isRtl ? "مدفوعة جزئياً" : "Partially Paid")
+                    break;
+                case InvoiceStatus.Paid:
+                    @(isRtl ? "مدفوعة" : "Paid")
+                    break;
+                case InvoiceStatus.Cancelled:
+                    @(isRtl ? "ملغاة" : "Cancelled")
+                    break;
+            }
+        </span>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="flex gap-2">
+        @if (Model.Status == InvoiceStatus.Draft)
+        {
+            <form asp-action="Confirm" asp-route-id="@Model.Id" method="post" class="inline">
+                @Html.AntiForgeryToken()
+                <button type="submit" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition">
+                    <i class="fas fa-check me-1"></i> @(isRtl ? "تأكيد" : "Confirm")
+                </button>
+            </form>
+            <a asp-action="Edit" asp-route-id="@Model.Id" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition">
+                <i class="fas fa-edit me-1"></i> @(isRtl ? "تعديل" : "Edit")
+            </a>
+        }
+        @if (Model.Status == InvoiceStatus.Posted || Model.Status == InvoiceStatus.PartiallyPaid)
+        {
+            <button type="button" onclick="document.getElementById('paymentModal').classList.remove('hidden')" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition">
+                <i class="fas fa-money-bill-wave me-1"></i> @(isRtl ? "تسجيل دفعة" : "Register Payment")
+            </button>
+            <form asp-action="CreateCreditNote" asp-route-id="@Model.Id" method="post" class="inline">
+                @Html.AntiForgeryToken()
+                <button type="submit" class="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition">
+                    <i class="fas fa-undo me-1"></i> @(isRtl ? "إشعار دائن" : "Credit Note")
+                </button>
+            </form>
+        }
+        @if (Model.Status != InvoiceStatus.Cancelled && Model.Status != InvoiceStatus.Paid)
+        {
+            <form asp-action="Cancel" asp-route-id="@Model.Id" method="post" class="inline" onsubmit="return confirm('@(isRtl ? "هل أنت متأكد من إلغاء الفاتورة؟" : "Are you sure you want to cancel this invoice?")')">
+                @Html.AntiForgeryToken()
+                <button type="submit" class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition">
+                    <i class="fas fa-times me-1"></i> @(isRtl ? "إلغاء" : "Cancel")
+                </button>
+            </form>
+        }
+    </div>
+</div>
+
+<!-- Invoice Info Card -->
+<div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
+    <div class="grid grid-cols-2 md:grid-cols-3 gap-6">
+        <div>
+            <p class="text-sm text-gray-500 mb-1">@(isRtl ? "التاريخ" : "Date")</p>
+            <p class="font-medium text-gray-800">@Model.Date.ToString("yyyy-MM-dd")</p>
+        </div>
+        <div>
+            <p class="text-sm text-gray-500 mb-1">@(isRtl ? "تاريخ الاستحقاق" : "Due Date")</p>
+            <p class="font-medium text-gray-800">@Model.DueDate.ToString("yyyy-MM-dd")</p>
+        </div>
+        <div>
+            <p class="text-sm text-gray-500 mb-1">@(isRtl ? "الشريك" : "Partner")</p>
+            <p class="font-medium text-gray-800">@(isRtl ? Model.PartnerNameAr ?? Model.PartnerName ?? "-" : Model.PartnerName ?? "-")</p>
+        </div>
+        <div>
+            <p class="text-sm text-gray-500 mb-1">@(isRtl ? "اليومية" : "Journal")</p>
+            <p class="font-medium text-gray-800">@(Model.Journal?.Name ?? "-")</p>
+        </div>
+        <div>
+            <p class="text-sm text-gray-500 mb-1">@(isRtl ? "المرجع" : "Reference")</p>
+            <p class="font-medium text-gray-800">@(Model.Reference ?? "-")</p>
+        </div>
+        <div>
+            <p class="text-sm text-gray-500 mb-1">@(isRtl ? "العملة" : "Currency")</p>
+            <p class="font-medium text-gray-800">@(Model.Currency?.Name ?? "-")</p>
+        </div>
+    </div>
+</div>
+
+<!-- Invoice Lines -->
+<div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden mb-6">
+    <div class="px-4 py-3 bg-gray-50 border-b border-gray-200">
+        <h2 class="font-semibold text-gray-700">@(isRtl ? "بنود الفاتورة" : "Invoice Lines")</h2>
+    </div>
+    <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+            <thead class="bg-gray-50 text-gray-600">
+                <tr>
+                    <th class="px-4 py-3 text-start w-10">#</th>
+                    <th class="px-4 py-3 text-start">@(isRtl ? "الوصف" : "Description")</th>
+                    <th class="px-4 py-3 text-start">@(isRtl ? "الحساب" : "Account")</th>
+                    <th class="px-4 py-3 text-end">@(isRtl ? "الكمية" : "Qty")</th>
+                    <th class="px-4 py-3 text-end">@(isRtl ? "سعر الوحدة" : "Unit Price")</th>
+                    <th class="px-4 py-3 text-end">@(isRtl ? "الخصم" : "Discount")</th>
+                    <th class="px-4 py-3 text-start">@(isRtl ? "الضريبة" : "Tax")</th>
+                    <th class="px-4 py-3 text-end">@(isRtl ? "المجموع الفرعي" : "SubTotal")</th>
+                    <th class="px-4 py-3 text-end">@(isRtl ? "الإجمالي" : "Total")</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100">
+                @{ int lineNum = 1; }
+                @foreach (var line in Model.Lines.OrderBy(l => l.Sequence))
+                {
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-4 py-3 text-gray-500">@lineNum</td>
+                        <td class="px-4 py-3 text-gray-700">@(isRtl ? line.DescriptionAr ?? line.Description : line.Description)</td>
+                        <td class="px-4 py-3">
+                            @if (line.Account != null)
+                            {
+                                <span class="font-mono text-blue-600 text-xs">@line.Account.Code</span>
+                                <span class="text-gray-600 ms-1">@line.Account.Name</span>
+                            }
+                            else
+                            {
+                                <span class="text-gray-400">-</span>
+                            }
+                        </td>
+                        <td class="px-4 py-3 text-end font-mono">@line.Quantity.ToString("N2")</td>
+                        <td class="px-4 py-3 text-end font-mono">@line.UnitPrice.ToString("N2")</td>
+                        <td class="px-4 py-3 text-end font-mono">@line.Discount.ToString("N2")</td>
+                        <td class="px-4 py-3 text-gray-600">@(line.Tax?.Name ?? "-")</td>
+                        <td class="px-4 py-3 text-end font-mono">@line.SubTotal.ToString("N2")</td>
+                        <td class="px-4 py-3 text-end font-mono font-medium">@line.Total.ToString("N2")</td>
+                    </tr>
+                    lineNum++;
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Totals Section -->
+<div class="flex justify-end mb-6">
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 w-full md:w-96">
+        <div class="space-y-3">
+            <div class="flex justify-between text-gray-600">
+                <span>@(isRtl ? "المجموع الفرعي" : "SubTotal")</span>
+                <span class="font-mono">@Model.SubTotal.ToString("N2")</span>
+            </div>
+            <div class="flex justify-between text-gray-600">
+                <span>@(isRtl ? "الضريبة" : "Tax")</span>
+                <span class="font-mono">@Model.TaxTotal.ToString("N2")</span>
+            </div>
+            <div class="border-t border-gray-200 pt-3 flex justify-between text-lg font-bold text-gray-800">
+                <span>@(isRtl ? "الإجمالي" : "Total")</span>
+                <span class="font-mono">@Model.Total.ToString("N2")</span>
+            </div>
+            <div class="flex justify-between text-gray-600">
+                <span>@(isRtl ? "المدفوع" : "Amount Paid")</span>
+                <span class="font-mono text-green-600">@Model.AmountPaid.ToString("N2")</span>
+            </div>
+            <div class="border-t border-gray-200 pt-3 flex justify-between font-bold @(Model.AmountDue > 0 ? "text-red-600" : "text-gray-800")">
+                <span>@(isRtl ? "المستحق" : "Amount Due")</span>
+                <span class="font-mono">@Model.AmountDue.ToString("N2")</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Payment History -->
+@if (Model.PaymentAllocations != null && Model.PaymentAllocations.Any())
+{
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden mb-6">
+        <div class="px-4 py-3 bg-gray-50 border-b border-gray-200">
+            <h2 class="font-semibold text-gray-700">@(isRtl ? "سجل المدفوعات" : "Payment History")</h2>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+                <thead class="bg-gray-50 text-gray-600">
+                    <tr>
+                        <th class="px-4 py-3 text-start">@(isRtl ? "التاريخ" : "Date")</th>
+                        <th class="px-4 py-3 text-start">@(isRtl ? "رقم الدفعة" : "Payment Number")</th>
+                        <th class="px-4 py-3 text-end">@(isRtl ? "المبلغ" : "Amount")</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100">
+                    @foreach (var allocation in Model.PaymentAllocations.OrderByDescending(a => a.AllocationDate))
+                    {
+                        <tr class="hover:bg-gray-50">
+                            <td class="px-4 py-3 text-gray-600">@allocation.AllocationDate.ToString("yyyy-MM-dd")</td>
+                            <td class="px-4 py-3">
+                                <a asp-controller="Payment" asp-action="Details" asp-route-id="@allocation.PaymentId" class="text-blue-600 hover:underline font-medium">
+                                    @allocation.Payment?.Number
+                                </a>
+                            </td>
+                            <td class="px-4 py-3 text-end font-mono font-medium text-green-600">@allocation.Amount.ToString("N2")</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+}
+
+<!-- Journal Entry Link -->
+@if (Model.JournalEntryId.HasValue)
+{
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4 mb-6">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-sm text-gray-500">@(isRtl ? "القيد المحاسبي" : "Journal Entry")</p>
+                <p class="font-medium text-gray-800">@(Model.JournalEntry?.Number ?? "-")</p>
+            </div>
+            <a asp-controller="JournalEntry" asp-action="Details" asp-route-id="@Model.JournalEntryId" class="text-blue-600 hover:underline font-medium">
+                <i class="fas fa-external-link-alt me-1"></i> @(isRtl ? "عرض القيد" : "View Entry")
+            </a>
+        </div>
+    </div>
+}
+
+<!-- Notes -->
+@if (!string.IsNullOrEmpty(Model.Notes))
+{
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4 mb-6">
+        <p class="text-sm text-gray-500 mb-1">@(isRtl ? "ملاحظات" : "Notes")</p>
+        <p class="text-gray-700">@(isRtl ? Model.NotesAr ?? Model.Notes : Model.Notes)</p>
+    </div>
+}
+
+<!-- Register Payment Modal -->
+<div id="paymentModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div class="bg-white rounded-xl p-6 w-full max-w-md mx-4 shadow-2xl">
+        <div class="flex items-center justify-between mb-6">
+            <h3 class="text-lg font-bold text-gray-800">@(isRtl ? "تسجيل دفعة" : "Register Payment")</h3>
+            <button type="button" onclick="document.getElementById('paymentModal').classList.add('hidden')" class="text-gray-400 hover:text-gray-600">
+                <i class="fas fa-times text-xl"></i>
+            </button>
+        </div>
+        <form asp-action="RegisterPayment" method="post">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="invoiceId" value="@Model.Id" />
+
+            <div class="space-y-4">
+                <!-- Amount -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">@(isRtl ? "المبلغ" : "Amount")</label>
+                    <input type="number" name="amount" step="0.01" min="0.01" max="@Model.AmountDue" value="@Model.AmountDue"
+                           class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-mono" required />
+                </div>
+
+                <!-- Payment Method -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">@(isRtl ? "طريقة الدفع" : "Payment Method")</label>
+                    <select name="paymentMethodId" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" required>
+                        <option value="">@(isRtl ? "-- اختر --" : "-- Select --")</option>
+                        @if (ViewBag.PaymentMethods != null)
+                        {
+                            @foreach (SelectListItem item in ViewBag.PaymentMethods)
+                            {
+                                <option value="@item.Value">@item.Text</option>
+                            }
+                        }
+                    </select>
+                </div>
+
+                <!-- Journal -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">@(isRtl ? "اليومية" : "Journal")</label>
+                    <select name="journalId" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" required>
+                        <option value="">@(isRtl ? "-- اختر --" : "-- Select --")</option>
+                        @if (ViewBag.PaymentJournals != null)
+                        {
+                            @foreach (SelectListItem item in ViewBag.PaymentJournals)
+                            {
+                                <option value="@item.Value">@item.Text</option>
+                            }
+                        }
+                    </select>
+                </div>
+
+                <!-- Memo -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">@(isRtl ? "ملاحظات" : "Memo")</label>
+                    <textarea name="memo" rows="2" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                              placeholder="@(isRtl ? "ملاحظات اختيارية..." : "Optional memo...")"></textarea>
+                </div>
+            </div>
+
+            <div class="flex justify-end gap-3 mt-6">
+                <button type="button" onclick="document.getElementById('paymentModal').classList.add('hidden')" class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition">
+                    @(isRtl ? "إلغاء" : "Cancel")
+                </button>
+                <button type="submit" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition">
+                    <i class="fas fa-check me-1"></i> @(isRtl ? "تسجيل الدفعة" : "Register Payment")
+                </button>
+            </div>
+        </form>
+    </div>
+</div>

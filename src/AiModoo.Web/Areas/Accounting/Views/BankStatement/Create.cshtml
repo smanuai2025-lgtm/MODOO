@@ -1,0 +1,84 @@
+@model BankStatement
+
+@{
+    ViewData["Title"] = "كشف بنك جديد | New Bank Statement";
+    var isRtl = System.Globalization.CultureInfo.CurrentCulture.Name.StartsWith("ar");
+}
+
+<div class="flex items-center justify-between mb-6">
+    <h1 class="text-2xl font-bold text-gray-800">@(isRtl ? "كشف بنك جديد" : "New Bank Statement")</h1>
+    <a asp-action="Index" class="bg-gray-100 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-200 transition">
+        <i class="fas fa-arrow-@(isRtl ? "right" : "left") me-1"></i> @(isRtl ? "رجوع" : "Back")
+    </a>
+</div>
+
+<div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 max-w-2xl">
+    <form asp-action="Create" method="post">
+        @Html.AntiForgeryToken()
+
+        @if (!ViewData.ModelState.IsValid)
+        {
+            <div class="mb-4 p-3 bg-red-50 border border-red-200 text-red-600 rounded-lg text-sm">
+                @foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+                {
+                    <p>@error.ErrorMessage</p>
+                }
+            </div>
+        }
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">@(isRtl ? "الحساب البنكي" : "Bank Account") *</label>
+                <select name="BankAccountId" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                    <option value="">@(isRtl ? "-- اختر --" : "-- Select --")</option>
+                    @if (ViewBag.BankAccounts != null)
+                    {
+                        @foreach (SelectListItem item in ViewBag.BankAccounts)
+                        {
+                            <option value="@item.Value">@item.Text</option>
+                        }
+                    }
+                </select>
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">@(isRtl ? "المرجع" : "Reference")</label>
+                <input type="text" name="Reference" value="@Model.Reference" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" />
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">@(isRtl ? "التاريخ" : "Date") *</label>
+                <input type="date" name="Date" value="@Model.Date.ToString("yyyy-MM-dd")" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" />
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">@(isRtl ? "بداية الفترة" : "Period Start") *</label>
+                <input type="date" name="PeriodStart" value="@Model.PeriodStart.ToString("yyyy-MM-dd")" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" />
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">@(isRtl ? "نهاية الفترة" : "Period End") *</label>
+                <input type="date" name="PeriodEnd" value="@Model.PeriodEnd.ToString("yyyy-MM-dd")" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" />
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">@(isRtl ? "الرصيد الافتتاحي" : "Opening Balance")</label>
+                <input type="number" step="0.01" name="OpeningBalance" value="@Model.OpeningBalance" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" />
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">@(isRtl ? "الرصيد الختامي" : "Closing Balance")</label>
+                <input type="number" step="0.01" name="ClosingBalance" value="@Model.ClosingBalance" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" />
+            </div>
+        </div>
+
+        <div class="mt-6 flex gap-3">
+            <button type="submit" class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition">
+                <i class="fas fa-save me-1"></i> @(isRtl ? "حفظ" : "Save")
+            </button>
+            <a asp-action="Index" class="bg-gray-100 text-gray-700 px-6 py-2 rounded-lg hover:bg-gray-200 transition">
+                @(isRtl ? "إلغاء" : "Cancel")
+            </a>
+        </div>
+    </form>
+</div>

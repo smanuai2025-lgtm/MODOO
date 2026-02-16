@@ -1,0 +1,74 @@
+@model FinancialReportDto
+
+@{
+    ViewData["Title"] = "قائمة الدخل | Income Statement";
+    var isRtl = System.Globalization.CultureInfo.CurrentCulture.Name.StartsWith("ar");
+}
+
+<div class="flex items-center justify-between mb-6">
+    <div class="flex items-center gap-3">
+        <a asp-action="Index" class="text-gray-500 hover:text-gray-700"><i class="fas fa-arrow-left"></i></a>
+        <h1 class="text-2xl font-bold text-gray-800">@(isRtl ? "قائمة الدخل" : "Income Statement")</h1>
+    </div>
+    <div class="flex gap-2">
+        <a asp-action="ExportIncomeStatementPdf" asp-route-fromDate="@Model.StartDate?.ToString("yyyy-MM-dd")" asp-route-toDate="@Model.EndDate?.ToString("yyyy-MM-dd")" class="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700">
+            <i class="fas fa-file-pdf me-1"></i> PDF
+        </a>
+        <button onclick="window.print()" class="bg-gray-100 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-200">
+            <i class="fas fa-print me-1"></i> @(isRtl ? "طباعة" : "Print")
+        </button>
+    </div>
+</div>
+
+<form method="get" class="bg-white rounded-xl shadow-sm border border-gray-200 p-4 mb-6">
+    <div class="flex flex-wrap gap-4 items-end">
+        <div>
+            <label class="block text-sm text-gray-600 mb-1">@(isRtl ? "من تاريخ" : "From Date")</label>
+            <input type="date" name="fromDate" value="@Model.StartDate?.ToString("yyyy-MM-dd")" class="px-3 py-2 border border-gray-300 rounded-lg" />
+        </div>
+        <div>
+            <label class="block text-sm text-gray-600 mb-1">@(isRtl ? "إلى تاريخ" : "To Date")</label>
+            <input type="date" name="toDate" value="@Model.EndDate?.ToString("yyyy-MM-dd")" class="px-3 py-2 border border-gray-300 rounded-lg" />
+        </div>
+        <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
+            <i class="fas fa-filter me-1"></i> @(isRtl ? "تصفية" : "Filter")
+        </button>
+    </div>
+</form>
+
+<div class="max-w-3xl mx-auto space-y-6">
+    @foreach (var section in Model.Sections)
+    {
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+            <div class="px-4 py-3 bg-gray-50 border-b border-gray-200">
+                <h2 class="font-semibold text-gray-700">@(isRtl ? section.TitleAr ?? section.Title : section.Title)</h2>
+            </div>
+            <div class="divide-y divide-gray-100">
+                @foreach (var line in section.Lines)
+                {
+                    <div class="flex justify-between px-6 py-2.5 hover:bg-gray-50" style="padding-left:@(line.Level * 20 + 24)px">
+                        <span class="text-gray-700">
+                            <span class="font-mono text-xs text-blue-600 me-2">@line.AccountCode</span>
+                            @(isRtl ? line.AccountNameAr ?? line.AccountName : line.AccountName)
+                        </span>
+                        <span class="font-mono font-medium">@line.Amount.ToString("N2")</span>
+                    </div>
+                }
+            </div>
+            <div class="flex justify-between px-6 py-3 bg-gray-50 font-bold border-t border-gray-200">
+                <span>@(isRtl ? "الإجمالي" : "Total") @(isRtl ? section.TitleAr ?? section.Title : section.Title)</span>
+                @{ var sTotal = section.SectionTotal; }
+                <span class="font-mono">@sTotal.ToString("N2")</span>
+            </div>
+        </div>
+    }
+
+    <div class="bg-blue-50 rounded-xl border border-blue-200 p-6">
+        <div class="flex justify-between items-center">
+            <span class="text-lg font-bold text-blue-800">@(isRtl ? "صافي الربح / الخسارة" : "Net Profit / Loss")</span>
+            <span class="text-2xl font-bold font-mono @(Model.GrandTotal >= 0 ? "text-green-700" : "text-red-700")">
+                @Model.GrandTotal.ToString("N2")
+            </span>
+        </div>
+    </div>
+</div>

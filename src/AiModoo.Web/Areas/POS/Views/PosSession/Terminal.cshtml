@@ -1,0 +1,525 @@
+@model PosSession
+@{
+    Layout = null;
+    var isRtl = CultureInfo.CurrentCulture.TwoLetterISOLanguageName == "ar";
+    var products = ViewBag.Products as List<Product> ?? new List<Product>();
+    var paymentMethods = ViewBag.PaymentMethods as List<PaymentMethod> ?? new List<PaymentMethod>();
+}
+<!DOCTYPE html>
+<html lang="@(isRtl ? "ar" : "en")" dir="@(isRtl ? "rtl" : "ltr")">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@(isRtl ? "نقطة البيع" : "POS Terminal") - @Model.Config.Name</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body { height: 100%; overflow: hidden; }
+        .product-card:hover { transform: scale(1.03); }
+        .product-card { transition: all 0.15s ease; }
+        .cart-item { transition: all 0.2s ease; }
+        .payment-modal { backdrop-filter: blur(4px); }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #f1f5f9; }
+        ::-webkit-scrollbar-thumb { background: #94a3b8; border-radius: 3px; }
+    </style>
+</head>
+<body class="bg-slate-100 h-screen flex flex-col">
+    <!-- Top Bar -->
+    <div class="bg-slate-800 text-white px-4 py-2 flex items-center justify-between flex-shrink-0">
+        <div class="flex items-center gap-4">
+            <a href="/POS/PosSession" class="text-slate-400 hover:text-white transition">
+                <i class="fas fa-arrow-left text-lg"></i>
+            </a>
+            <div>
+                <span class="font-semibold text-teal-400">@Model.Config.Name</span>
+                <span class="text-slate-400 text-sm mx-2">|</span>
+                <span class="text-sm text-slate-300">@Model.Name</span>
+            </div>
+        </div>
+        <div class="flex items-center gap-4">
+            <span class="text-sm text-slate-400">
+                <i class="fas fa-user mr-1"></i>@Model.UserName
+            </span>
+            <span class="text-sm text-slate-400" id="clock"></span>
+            <button onclick="showCloseModal()" class="bg-red-600 hover:bg-red-700 text-white px-4 py-1.5 rounded-lg text-sm transition">
+                <i class="fas fa-power-off mr-1"></i>@(isRtl ? "إغلاق الجلسة" : "Close Session")
+            </button>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="flex flex-1 overflow-hidden">
+        <!-- Left: Products Grid -->
+        <div class="flex-1 flex flex-col bg-slate-50">
+            <!-- Search & Categories -->
+            <div class="p-3 bg-white border-b border-slate-200 flex gap-3">
+                <div class="relative flex-1">
+                    <input type="text" id="searchInput" placeholder="@(isRtl ? "بحث بالاسم أو الباركود..." : "Search by name or barcode...")"
+                           class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 focus:border-teal-500 focus:ring-1 focus:ring-teal-500 text-sm"
+                           oninput="filterProducts()" />
+                    <i class="fas fa-search absolute left-3 top-3.5 text-slate-400"></i>
+                </div>
+                <select id="categoryFilter" onchange="filterProducts()"
+                        class="rounded-xl border border-slate-200 px-4 py-2.5 text-sm focus:border-teal-500 focus:ring-1 focus:ring-teal-500">
+                    <option value="">@(isRtl ? "كل الأصناف" : "All Categories")</option>
+                </select>
+            </div>
+
+            <!-- Products Grid -->
+            <div class="flex-1 overflow-y-auto p-3" id="productsGrid">
+                <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
+                    @foreach (var product in products)
+                    {
+                        <div class="product-card bg-white rounded-xl border border-slate-200 p-3 cursor-pointer hover:border-teal-400 hover:shadow-md"
+                             data-id="@product.Id"
+                             data-name="@product.Name"
+                             data-namear="@(product.NameAr ?? "")"
+                             data-price="@product.SalePrice"
+                             data-barcode="@product.Barcode"
+                             data-category="@product.CategoryId">
+                            <div class="w-full h-16 bg-slate-100 rounded-lg flex items-center justify-center mb-2">
+                                @if (!string.IsNullOrEmpty(product.ImageUrl))
+                                {
+                                    <img src="@product.ImageUrl" class="h-full object-contain rounded-lg" />
+                                }
+                                else
+                                {
+                                    <i class="fas fa-box text-slate-300 text-2xl"></i>
+                                }
+                            </div>
+                            <p class="text-xs font-medium text-slate-700 truncate">@(isRtl && !string.IsNullOrEmpty(product.NameAr) ? product.NameAr : product.Name)</p>
+                            <p class="text-sm font-bold text-teal-600 mt-1">@product.SalePrice.ToString("N2")</p>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- Right: Cart -->
+        <div class="w-96 bg-white border-l border-slate-200 flex flex-col flex-shrink-0">
+            <!-- Cart Header -->
+            <div class="p-3 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
+                <h2 class="font-semibold text-slate-700">
+                    <i class="fas fa-shopping-cart text-teal-600 mr-2"></i>
+                    @(isRtl ? "الطلب الحالي" : "Current Order")
+                </h2>
+                <button onclick="clearCart()" class="text-red-500 hover:text-red-700 text-sm transition">
+                    <i class="fas fa-trash mr-1"></i>@(isRtl ? "مسح" : "Clear")
+                </button>
+            </div>
+
+            <!-- Customer -->
+            <div class="px-3 py-2 border-b border-slate-100">
+                <input type="text" id="customerName" placeholder="@(isRtl ? "اسم العميل (اختياري)" : "Customer name (optional)")"
+                       class="w-full rounded-lg border-slate-200 text-sm py-2 focus:border-teal-500 focus:ring-1 focus:ring-teal-500" />
+            </div>
+
+            <!-- Cart Items -->
+            <div class="flex-1 overflow-y-auto" id="cartItems">
+                <div class="text-center py-12 text-slate-300" id="emptyCart">
+                    <i class="fas fa-shopping-basket text-3xl mb-2"></i>
+                    <p class="text-sm">@(isRtl ? "أضف منتجات للطلب" : "Add products to order")</p>
+                </div>
+            </div>
+
+            <!-- Cart Footer / Totals -->
+            <div class="border-t border-slate-200 bg-slate-50 p-3 space-y-2">
+                <div class="flex justify-between text-sm text-slate-500">
+                    <span>@(isRtl ? "المجموع الفرعي" : "Subtotal")</span>
+                    <span id="subtotalDisplay">0.00</span>
+                </div>
+                <div class="flex justify-between text-sm text-slate-500">
+                    <span>@(isRtl ? "الضريبة" : "Tax")</span>
+                    <span id="taxDisplay">0.00</span>
+                </div>
+                <div class="flex justify-between text-sm text-slate-500">
+                    <span>@(isRtl ? "الخصم" : "Discount")</span>
+                    <span id="discountDisplay">0.00</span>
+                </div>
+                <div class="flex justify-between text-lg font-bold text-slate-800 pt-2 border-t border-slate-200">
+                    <span>@(isRtl ? "الإجمالي" : "Total")</span>
+                    <span id="totalDisplay" class="text-teal-600">0.00</span>
+                </div>
+                <button onclick="showPaymentModal()" id="payBtn"
+                        class="w-full bg-teal-600 hover:bg-teal-700 text-white py-3 rounded-xl font-semibold text-lg transition disabled:opacity-50 disabled:cursor-not-allowed mt-2"
+                        disabled>
+                    <i class="fas fa-credit-card mr-2"></i>@(isRtl ? "الدفع" : "Payment")
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Payment Modal -->
+    <div id="paymentModal" class="hidden fixed inset-0 bg-black/50 payment-modal z-50 flex items-center justify-center">
+        <div class="bg-white rounded-2xl shadow-2xl w-[520px] max-h-[90vh] overflow-y-auto">
+            <div class="p-6 border-b border-slate-200">
+                <div class="flex items-center justify-between">
+                    <h3 class="text-xl font-bold text-slate-800">@(isRtl ? "الدفع" : "Payment")</h3>
+                    <button onclick="hidePaymentModal()" class="text-slate-400 hover:text-slate-600">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+                <div class="mt-3 text-center">
+                    <p class="text-3xl font-bold text-teal-600" id="paymentTotal">0.00</p>
+                    <p class="text-sm text-slate-500 mt-1">@(isRtl ? "المبلغ المطلوب" : "Amount Due")</p>
+                </div>
+            </div>
+
+            <div class="p-6 space-y-4">
+                <div id="paymentMethodsContainer">
+                    @foreach (var pm in paymentMethods)
+                    {
+                        <div class="flex items-center gap-3 p-3 bg-slate-50 rounded-xl payment-method-row" data-pmid="@pm.Id">
+                            <div class="w-10 h-10 bg-teal-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                                <i class="fas @(pm.Name.Contains("Cash") || pm.Name.Contains("نقد") ? "fa-money-bill-wave" : "fa-credit-card") text-teal-600"></i>
+                            </div>
+                            <span class="flex-1 font-medium text-slate-700">@(isRtl && !string.IsNullOrEmpty(pm.NameAr) ? pm.NameAr : pm.Name)</span>
+                            <input type="number" class="w-32 rounded-lg border-slate-300 text-right font-medium payment-amount"
+                                   data-pmid="@pm.Id" step="0.01" min="0" value="0" oninput="updatePaymentTotals()" />
+                        </div>
+                    }
+                </div>
+
+                <div class="flex justify-between items-center p-3 bg-green-50 rounded-xl">
+                    <span class="font-medium text-green-700">@(isRtl ? "المدفوع" : "Paid")</span>
+                    <span class="font-bold text-green-700 text-lg" id="paidDisplay">0.00</span>
+                </div>
+                <div class="flex justify-between items-center p-3 bg-amber-50 rounded-xl">
+                    <span class="font-medium text-amber-700">@(isRtl ? "الباقي" : "Change")</span>
+                    <span class="font-bold text-amber-700 text-lg" id="changeDisplay">0.00</span>
+                </div>
+
+                <button onclick="submitOrder()" id="confirmPayBtn"
+                        class="w-full bg-teal-600 hover:bg-teal-700 text-white py-3 rounded-xl font-semibold text-lg transition disabled:opacity-50"
+                        disabled>
+                    <i class="fas fa-check mr-2"></i>@(isRtl ? "تأكيد الدفع" : "Confirm Payment")
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Close Session Modal -->
+    <div id="closeModal" class="hidden fixed inset-0 bg-black/50 payment-modal z-50 flex items-center justify-center">
+        <div class="bg-white rounded-2xl shadow-2xl w-[450px]">
+            <div class="p-6 border-b border-slate-200 text-center">
+                <div class="w-14 h-14 bg-red-100 rounded-2xl flex items-center justify-center mx-auto mb-3">
+                    <i class="fas fa-power-off text-2xl text-red-600"></i>
+                </div>
+                <h3 class="text-xl font-bold text-slate-800">@(isRtl ? "إغلاق الجلسة" : "Close Session")</h3>
+            </div>
+            <form asp-action="Close" method="post" class="p-6 space-y-4">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="sessionId" value="@Model.Id" />
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">@(isRtl ? "الرصيد الختامي" : "Closing Balance")</label>
+                    <input type="number" name="closingBalance" step="0.01" min="0" value="0" required
+                           class="w-full rounded-xl border-slate-300 focus:border-teal-500 focus:ring-teal-500" />
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">@(isRtl ? "ملاحظات" : "Notes")</label>
+                    <textarea name="notes" rows="2" class="w-full rounded-xl border-slate-300 focus:border-teal-500 focus:ring-teal-500"></textarea>
+                </div>
+                <div class="flex gap-3">
+                    <button type="submit" class="flex-1 bg-red-600 hover:bg-red-700 text-white py-3 rounded-xl font-medium transition">
+                        <i class="fas fa-power-off mr-2"></i>@(isRtl ? "إغلاق" : "Close Session")
+                    </button>
+                    <button type="button" onclick="hideCloseModal()" class="px-6 py-3 bg-slate-100 text-slate-600 rounded-xl font-medium hover:bg-slate-200 transition">
+                        @(isRtl ? "إلغاء" : "Cancel")
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Success Toast -->
+    <div id="successToast" class="hidden fixed bottom-6 right-6 bg-green-600 text-white px-6 py-4 rounded-xl shadow-2xl z-50 flex items-center gap-3">
+        <i class="fas fa-check-circle text-xl"></i>
+        <div>
+            <p class="font-semibold" id="toastTitle">@(isRtl ? "تم الطلب" : "Order Completed")</p>
+            <p class="text-sm text-green-100" id="toastMessage"></p>
+        </div>
+    </div>
+
+    <script>
+        const sessionId = @Model.Id;
+        const antiForgeryToken = document.querySelector('input[name="__RequestVerificationToken"]')?.value || '';
+        let cart = [];
+        let orderCounter = @(Model.Orders?.Count ?? 0);
+
+        function parseName(raw) {
+            return raw || '';
+        }
+
+        // Clock
+        function updateClock() {
+            const now = new Date();
+            document.getElementById('clock').textContent = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+        }
+        updateClock();
+        setInterval(updateClock, 1000);
+
+        // Product click via event delegation
+        document.getElementById('productsGrid').addEventListener('click', function(e) {
+            const card = e.target.closest('.product-card');
+            if (!card) return;
+            const id = parseInt(card.dataset.id);
+            const name = parseName(card.dataset.name);
+            const nameAr = parseName(card.dataset.namear);
+            const price = parseFloat(card.dataset.price);
+            if (id && price >= 0) addToCart(id, name, nameAr, price);
+        });
+
+        // Filter products
+        function filterProducts() {
+            const search = document.getElementById('searchInput').value.toLowerCase();
+            const category = document.getElementById('categoryFilter').value;
+            document.querySelectorAll('.product-card').forEach(card => {
+                const name = (parseName(card.dataset.name) + ' ' + parseName(card.dataset.namear) + ' ' + (card.dataset.barcode || '')).toLowerCase();
+                const cat = card.dataset.category;
+                const matchSearch = !search || name.includes(search);
+                const matchCat = !category || cat === category;
+                card.style.display = matchSearch && matchCat ? '' : 'none';
+            });
+        }
+
+        // Barcode scanner support (rapid keystrokes)
+        let barcodeBuffer = '';
+        let barcodeTimer = null;
+        document.addEventListener('keydown', function(e) {
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+            if (e.key === 'Enter' && barcodeBuffer.length > 3) {
+                const card = document.querySelector(`.product-card[data-barcode="${barcodeBuffer}"]`);
+                if (card) {
+                    addToCart(parseInt(card.dataset.id), parseName(card.dataset.name), parseName(card.dataset.namear), parseFloat(card.dataset.price));
+                }
+                barcodeBuffer = '';
+                return;
+            }
+            if (e.key.length === 1) {
+                barcodeBuffer += e.key;
+                clearTimeout(barcodeTimer);
+                barcodeTimer = setTimeout(() => barcodeBuffer = '', 100);
+            }
+        });
+
+        // Cart
+        function addToCart(id, name, nameAr, price) {
+            const existing = cart.find(i => i.id === id);
+            if (existing) {
+                existing.qty++;
+            } else {
+                cart.push({ id, name, nameAr, price, qty: 1, discount: 0, tax: 0 });
+            }
+            renderCart();
+        }
+
+        function updateQty(id, delta) {
+            const item = cart.find(i => i.id === id);
+            if (!item) return;
+            item.qty += delta;
+            if (item.qty <= 0) cart = cart.filter(i => i.id !== id);
+            renderCart();
+        }
+
+        function setQty(id, val) {
+            const item = cart.find(i => i.id === id);
+            if (!item) return;
+            item.qty = parseFloat(val) || 0;
+            if (item.qty <= 0) cart = cart.filter(i => i.id !== id);
+            renderCart();
+        }
+
+        function setDiscount(id, val) {
+            const item = cart.find(i => i.id === id);
+            if (item) item.discount = parseFloat(val) || 0;
+            renderCart();
+        }
+
+        function removeFromCart(id) {
+            cart = cart.filter(i => i.id !== id);
+            renderCart();
+        }
+
+        function clearCart() {
+            cart = [];
+            renderCart();
+        }
+
+        function renderCart() {
+            const container = document.getElementById('cartItems');
+            const emptyCart = document.getElementById('emptyCart');
+
+            if (cart.length === 0) {
+                container.innerHTML = `<div class="text-center py-12 text-slate-300" id="emptyCart">
+                    <i class="fas fa-shopping-basket text-3xl mb-2"></i>
+                    <p class="text-sm">@(isRtl ? "أضف منتجات للطلب" : "Add products to order")</p>
+                </div>`;
+                updateTotals();
+                return;
+            }
+
+            let html = '<div class="divide-y divide-slate-100">';
+            cart.forEach((item, idx) => {
+                const lineTotal = item.qty * item.price * (1 - item.discount / 100);
+                html += `
+                <div class="cart-item p-3 hover:bg-slate-50">
+                    <div class="flex items-start justify-between gap-2">
+                        <div class="flex-1 min-w-0">
+                            <p class="font-medium text-slate-700 text-sm truncate">${item.name}</p>
+                            <p class="text-xs text-slate-400 mt-0.5">${item.price.toFixed(2)} × ${item.qty}</p>
+                        </div>
+                        <div class="text-right flex-shrink-0">
+                            <p class="font-semibold text-slate-800 text-sm">${lineTotal.toFixed(2)}</p>
+                            <button onclick="removeFromCart(${item.id})" class="text-red-400 hover:text-red-600 text-xs mt-0.5">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2 mt-2">
+                        <button onclick="updateQty(${item.id}, -1)" class="w-7 h-7 bg-slate-200 hover:bg-slate-300 rounded-lg flex items-center justify-center text-sm transition">-</button>
+                        <input type="number" value="${item.qty}" min="0.01" step="1"
+                               onchange="setQty(${item.id}, this.value)"
+                               class="w-14 text-center rounded-lg border-slate-200 text-sm py-1" />
+                        <button onclick="updateQty(${item.id}, 1)" class="w-7 h-7 bg-teal-100 hover:bg-teal-200 text-teal-700 rounded-lg flex items-center justify-center text-sm transition">+</button>
+                        <span class="text-xs text-slate-400 mx-1">@(isRtl ? "خصم%" : "Disc%")</span>
+                        <input type="number" value="${item.discount}" min="0" max="100" step="1"
+                               onchange="setDiscount(${item.id}, this.value)"
+                               class="w-14 text-center rounded-lg border-slate-200 text-sm py-1" />
+                    </div>
+                </div>`;
+            });
+            html += '</div>';
+            container.innerHTML = html;
+            updateTotals();
+        }
+
+        function updateTotals() {
+            let subtotal = 0, tax = 0, discount = 0;
+            cart.forEach(item => {
+                const gross = item.qty * item.price;
+                const disc = gross * (item.discount / 100);
+                const net = gross - disc;
+                subtotal += net;
+                discount += disc;
+            });
+            const total = subtotal + tax;
+
+            document.getElementById('subtotalDisplay').textContent = subtotal.toFixed(2);
+            document.getElementById('taxDisplay').textContent = tax.toFixed(2);
+            document.getElementById('discountDisplay').textContent = discount.toFixed(2);
+            document.getElementById('totalDisplay').textContent = total.toFixed(2);
+            document.getElementById('payBtn').disabled = cart.length === 0;
+        }
+
+        // Payment Modal
+        function showPaymentModal() {
+            if (cart.length === 0) return;
+            const total = parseFloat(document.getElementById('totalDisplay').textContent);
+            document.getElementById('paymentTotal').textContent = total.toFixed(2);
+
+            // Auto-fill first payment method
+            const inputs = document.querySelectorAll('.payment-amount');
+            inputs.forEach((inp, i) => {
+                inp.value = i === 0 ? total.toFixed(2) : '0';
+            });
+            updatePaymentTotals();
+            document.getElementById('paymentModal').classList.remove('hidden');
+        }
+
+        function hidePaymentModal() {
+            document.getElementById('paymentModal').classList.add('hidden');
+        }
+
+        function updatePaymentTotals() {
+            const total = parseFloat(document.getElementById('paymentTotal').textContent);
+            let paid = 0;
+            document.querySelectorAll('.payment-amount').forEach(inp => {
+                paid += parseFloat(inp.value) || 0;
+            });
+            const change = Math.max(0, paid - total);
+            document.getElementById('paidDisplay').textContent = paid.toFixed(2);
+            document.getElementById('changeDisplay').textContent = change.toFixed(2);
+            document.getElementById('confirmPayBtn').disabled = paid < total;
+        }
+
+        function showCloseModal() { document.getElementById('closeModal').classList.remove('hidden'); }
+        function hideCloseModal() { document.getElementById('closeModal').classList.add('hidden'); }
+
+        // Submit Order
+        async function submitOrder() {
+            const total = parseFloat(document.getElementById('paymentTotal').textContent);
+            let paid = 0;
+            document.querySelectorAll('.payment-amount').forEach(inp => {
+                paid += parseFloat(inp.value) || 0;
+            });
+
+            const formData = new FormData();
+            formData.append('sessionId', sessionId);
+            formData.append('partnerName', document.getElementById('customerName').value);
+            formData.append('amountPaid', paid);
+            formData.append('notes', '');
+
+            // Get the anti-forgery token from the close form
+            const tokenInput = document.querySelector('input[name="__RequestVerificationToken"]');
+            if (tokenInput) formData.append('__RequestVerificationToken', tokenInput.value);
+
+            cart.forEach((item, i) => {
+                formData.append('ProductIds', item.id);
+                formData.append('ProductNames', item.name);
+                formData.append('Quantities', item.qty);
+                formData.append('UnitPrices', item.price);
+                formData.append('Discounts', item.discount);
+                formData.append('TaxAmounts', item.tax);
+            });
+
+            document.querySelectorAll('.payment-amount').forEach(inp => {
+                const pmId = inp.dataset.pmid;
+                const amount = parseFloat(inp.value) || 0;
+                if (amount > 0) {
+                    formData.append('PaymentMethodIds', pmId);
+                    formData.append('PaymentAmounts', amount);
+                }
+            });
+
+            try {
+                document.getElementById('confirmPayBtn').disabled = true;
+                document.getElementById('confirmPayBtn').innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>@(isRtl ? "جاري المعالجة..." : "Processing...")';
+
+                const response = await fetch('/POS/PosSession/CreateOrder', {
+                    method: 'POST',
+                    body: formData
+                });
+                const result = await response.json();
+
+                if (result.success) {
+                    hidePaymentModal();
+                    clearCart();
+                    document.getElementById('customerName').value = '';
+                    orderCounter++;
+
+                    // Show success toast
+                    const toast = document.getElementById('successToast');
+                    document.getElementById('toastMessage').textContent = `${result.orderNumber} - ${result.total.toFixed(2)}` + (result.change > 0 ? ` | @(isRtl ? "الباقي" : "Change"): ${result.change.toFixed(2)}` : '');
+                    toast.classList.remove('hidden');
+                    setTimeout(() => toast.classList.add('hidden'), 4000);
+                } else {
+                    alert(result.message || '@(isRtl ? "حدث خطأ" : "An error occurred")');
+                }
+            } catch (err) {
+                alert('@(isRtl ? "حدث خطأ في الاتصال" : "Connection error")');
+            } finally {
+                document.getElementById('confirmPayBtn').disabled = false;
+                document.getElementById('confirmPayBtn').innerHTML = '<i class="fas fa-check mr-2"></i>@(isRtl ? "تأكيد الدفع" : "Confirm Payment")';
+            }
+        }
+
+        // Keyboard shortcut: F2 to focus search
+        document.addEventListener('keydown', e => {
+            if (e.key === 'F2') { e.preventDefault(); document.getElementById('searchInput').focus(); }
+            if (e.key === 'F12') { e.preventDefault(); showPaymentModal(); }
+        });
+    </script>
+</body>
+</html>

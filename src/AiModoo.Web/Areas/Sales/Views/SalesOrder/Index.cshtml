@@ -1,0 +1,139 @@
+@model IEnumerable<SalesOrder>
+@{
+    ViewData["Title"] = "Sales Orders";
+    var isRtl = CultureInfo.CurrentCulture.TextInfo.IsRightToLeft;
+}
+
+<div class="space-y-6">
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+            <h1 class="text-2xl font-bold text-slate-800">@(isRtl ? "طلبات البيع" : "Sales Orders")</h1>
+            <p class="text-slate-500 mt-1">@(isRtl ? "إدارة عروض الأسعار وطلبات البيع" : "Manage quotations and sales orders")</p>
+        </div>
+        <a href="/Sales/SalesOrder/Create" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg flex items-center gap-2">
+            <i class="fas fa-plus"></i>
+            @(isRtl ? "عرض سعر جديد" : "New Quotation")
+        </a>
+    </div>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg">@TempData["Success"]</div>
+    }
+    @if (TempData["Error"] != null)
+    {
+        <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">@TempData["Error"]</div>
+    }
+
+    <!-- Stats -->
+    <div class="grid grid-cols-2 sm:grid-cols-5 gap-4">
+        @{
+            var statusGroups = new[] {
+                (SalesOrderStatus.Quotation, isRtl ? "عروض أسعار" : "Quotations", "amber", "file-alt"),
+                (SalesOrderStatus.QuotationSent, isRtl ? "مرسلة" : "Sent", "blue", "paper-plane"),
+                (SalesOrderStatus.SalesOrder, isRtl ? "طلبات بيع" : "Sales Orders", "green", "check-circle"),
+                (SalesOrderStatus.Done, isRtl ? "منتهية" : "Done", "slate", "flag-checkered"),
+                (SalesOrderStatus.Cancelled, isRtl ? "ملغاة" : "Cancelled", "red", "times-circle")
+            };
+        }
+        @foreach (var (status, label, color, icon) in statusGroups)
+        {
+            var cnt = Model.Count(o => o.Status == status);
+            <a href="/Sales/SalesOrder?status=@((int)status)" class="bg-white rounded-xl shadow-sm border p-4 hover:border-@(color)-300 transition @(ViewBag.CurrentStatus != null && (SalesOrderStatus)ViewBag.CurrentStatus == status ? $"border-{color}-400 ring-1 ring-{color}-200" : "")">
+                <div class="flex items-center gap-3">
+                    <i class="fas fa-@icon text-@(color)-500"></i>
+                    <div>
+                        <p class="text-xs text-slate-500">@label</p>
+                        <p class="text-xl font-bold text-slate-800">@cnt</p>
+                    </div>
+                </div>
+            </a>
+        }
+    </div>
+
+    <!-- Filters -->
+    <div class="bg-white rounded-xl shadow-sm border p-4">
+        <form method="get" class="flex flex-wrap gap-4 items-end">
+            <div>
+                <label class="block text-sm text-slate-600 mb-1">@(isRtl ? "البحث" : "Search")</label>
+                <input type="text" name="search" value="@ViewBag.CurrentSearch" class="border rounded-lg px-3 py-2 text-sm w-48" placeholder="@(isRtl ? "رقم أو عميل..." : "Number or customer...")" />
+            </div>
+            <div>
+                <label class="block text-sm text-slate-600 mb-1">@(isRtl ? "الحالة" : "Status")</label>
+                <select name="status" class="border rounded-lg px-3 py-2 text-sm">
+                    <option value="">@(isRtl ? "الكل" : "All")</option>
+                    @foreach (var s in Enum.GetValues<SalesOrderStatus>())
+                    {
+                        <option value="@((int)s)" selected="@(ViewBag.CurrentStatus != null && (int)(SalesOrderStatus)ViewBag.CurrentStatus == (int)s)">@s</option>
+                    }
+                </select>
+            </div>
+            <button type="submit" class="bg-slate-100 hover:bg-slate-200 px-4 py-2 rounded-lg text-sm">
+                <i class="fas fa-filter"></i> @(isRtl ? "تصفية" : "Filter")
+            </button>
+            <a href="/Sales/SalesOrder" class="text-slate-400 hover:text-slate-600 text-sm px-2 py-2">@(isRtl ? "مسح" : "Clear")</a>
+        </form>
+    </div>
+
+    <!-- Orders Table -->
+    <div class="bg-white rounded-xl shadow-sm border overflow-hidden">
+        <table class="w-full text-sm">
+            <thead class="bg-slate-50 text-slate-600">
+                <tr>
+                    <th class="px-4 py-3 text-start">@(isRtl ? "الرقم" : "Number")</th>
+                    <th class="px-4 py-3 text-start">@(isRtl ? "العميل" : "Customer")</th>
+                    <th class="px-4 py-3 text-start">@(isRtl ? "التاريخ" : "Date")</th>
+                    <th class="px-4 py-3 text-center">@(isRtl ? "الحالة" : "Status")</th>
+                    <th class="px-4 py-3 text-center">@(isRtl ? "التسليم" : "Delivery")</th>
+                    <th class="px-4 py-3 text-center">@(isRtl ? "الفاتورة" : "Invoice")</th>
+                    <th class="px-4 py-3 text-end">@(isRtl ? "المبلغ" : "Total")</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y">
+                @foreach (var order in Model)
+                {
+                    <tr class="hover:bg-slate-50 cursor-pointer" onclick="window.location='/Sales/SalesOrder/Details/@order.Id'">
+                        <td class="px-4 py-3 font-mono text-blue-600 font-medium">@order.Number</td>
+                        <td class="px-4 py-3">@(isRtl && !string.IsNullOrEmpty(order.Partner?.NameAr) ? order.Partner.NameAr : order.Partner?.Name)</td>
+                        <td class="px-4 py-3 text-slate-600">@order.OrderDate.ToString("yyyy-MM-dd")</td>
+                        <td class="px-4 py-3 text-center">
+                            @{
+                                var sc = order.Status switch { SalesOrderStatus.Quotation => "amber", SalesOrderStatus.QuotationSent => "blue", SalesOrderStatus.SalesOrder => "emerald", SalesOrderStatus.Done => "slate", SalesOrderStatus.Cancelled => "red", _ => "slate" };
+                                var sn = order.Status switch { SalesOrderStatus.Quotation => isRtl ? "عرض سعر" : "Quotation", SalesOrderStatus.QuotationSent => isRtl ? "مرسل" : "Sent", SalesOrderStatus.SalesOrder => isRtl ? "طلب بيع" : "Sales Order", SalesOrderStatus.Done => isRtl ? "منتهي" : "Done", SalesOrderStatus.Cancelled => isRtl ? "ملغي" : "Cancelled", _ => "" };
+                            }
+                            <span class="px-2 py-1 rounded-full text-xs bg-@(sc)-100 text-@(sc)-700">@sn</span>
+                        </td>
+                        <td class="px-4 py-3 text-center">
+                            @if (order.DeliveryPickingId.HasValue)
+                            {
+                                <i class="fas fa-truck text-green-500" title="@(isRtl ? "تم التسليم" : "Delivered")"></i>
+                            }
+                            else
+                            {
+                                <i class="fas fa-clock text-slate-300"></i>
+                            }
+                        </td>
+                        <td class="px-4 py-3 text-center">
+                            @if (order.InvoiceId.HasValue)
+                            {
+                                <i class="fas fa-file-invoice text-green-500" title="@(isRtl ? "تم الفوترة" : "Invoiced")"></i>
+                            }
+                            else
+                            {
+                                <i class="fas fa-clock text-slate-300"></i>
+                            }
+                        </td>
+                        <td class="px-4 py-3 text-end font-medium">@order.Total.ToString("N2")</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+        @if (!Model.Any())
+        {
+            <div class="text-center py-12 text-slate-400">
+                <i class="fas fa-shopping-cart text-4xl mb-3"></i>
+                <p>@(isRtl ? "لا توجد طلبات" : "No orders found")</p>
+            </div>
+        }
+    </div>
+</div>

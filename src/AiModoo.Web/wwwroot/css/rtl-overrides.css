@@ -1,0 +1,33 @@
+/* RTL Overrides for AI MODOO */
+[dir="rtl"] {
+    text-align: right;
+}
+
+[dir="rtl"] .fa-arrow-right::before {
+    content: "\f060"; /* arrow-left */
+}
+
+[dir="rtl"] .fa-arrow-left::before {
+    content: "\f061"; /* arrow-right */
+}
+
+[dir="rtl"] .fa-sign-in-alt::before {
+    transform: scaleX(-1);
+}
+
+[dir="rtl"] .fa-sign-out-alt::before {
+    transform: scaleX(-1);
+}
+
+/* Fix for number inputs in RTL */
+[dir="rtl"] input[type="number"] {
+    direction: ltr;
+    text-align: right;
+}
+
+/* Fix for date inputs in RTL */
+[dir="rtl"] input[type="date"],
+[dir="rtl"] input[type="datetime-local"] {
+    direction: ltr;
+    text-align: right;
+}

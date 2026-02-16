@@ -1,0 +1,232 @@
+@model AiModoo.Core.DTOs.Accounting.PartnerStatementDto
+
+@using System.Globalization
+@{
+    ViewData["Title"] = "كشف حساب شريك | Partner Statement";
+    var isRtl = CultureInfo.CurrentCulture.Name.StartsWith("ar");
+    var inv = CultureInfo.InvariantCulture;
+}
+
+<div class="flex items-center justify-between mb-6">
+    <div class="flex items-center gap-3">
+        <a asp-action="Index" class="text-gray-500 hover:text-gray-700"><i class="fas fa-arrow-left"></i></a>
+        <h1 class="text-2xl font-bold text-gray-800">
+            <i class="fas fa-user-tie text-indigo-500 me-2"></i>
+            @(isRtl ? "كشف حساب شريك" : "Partner Statement")
+        </h1>
+    </div>
+    @if (Model != null)
+    {
+        <button onclick="window.print()" class="bg-gray-100 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-200 no-print">
+            <i class="fas fa-print me-1"></i> @(isRtl ? "طباعة" : "Print")
+        </button>
+    }
+</div>
+
+<!-- Filter Form -->
+<div class="bg-white rounded-xl shadow-sm border border-gray-200 p-5 mb-6 no-print">
+    <form method="get" class="space-y-4">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 items-end">
+            <div>
+                <label class="block text-sm font-medium text-gray-600 mb-1">@(isRtl ? "نوع الشريك" : "Partner Type")</label>
+                @{
+                    var selectedType = ViewBag.PartnerType?.ToString() ?? "";
+                }
+                <select name="type" id="partnerTypeSelect" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                    <option value="">@(isRtl ? "الكل" : "All")</option>
+                    @if (selectedType == "Customer") {
+                        <option value="Customer" selected>@(isRtl ? "عميل" : "Customer")</option>
+                    } else {
+                        <option value="Customer">@(isRtl ? "عميل" : "Customer")</option>
+                    }
+                    @if (selectedType == "Vendor") {
+                        <option value="Vendor" selected>@(isRtl ? "مورد" : "Vendor")</option>
+                    } else {
+                        <option value="Vendor">@(isRtl ? "مورد" : "Vendor")</option>
+                    }
+                </select>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-600 mb-1">@(isRtl ? "الشريك" : "Partner") *</label>
+                <select name="partnerId" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" required>
+                    <option value="">@(isRtl ? "-- اختر --" : "-- Select --")</option>
+                    @if (ViewBag.Partners != null)
+                    {
+                        var selPartnerId = ViewBag.SelectedPartnerId?.ToString() ?? "";
+                        foreach (SelectListItem item in ViewBag.Partners)
+                        {
+                            if (selPartnerId == item.Value) {
+                                <option value="@item.Value" selected>@item.Text</option>
+                            } else {
+                                <option value="@item.Value">@item.Text</option>
+                            }
+                        }
+                    }
+                </select>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-600 mb-1">@(isRtl ? "من تاريخ" : "From Date")</label>
+                <input type="date" name="fromDate" value="@((ViewBag.FromDate as DateTime?)?.ToString("yyyy-MM-dd", inv))"
+                       class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" />
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-600 mb-1">@(isRtl ? "إلى تاريخ" : "To Date")</label>
+                <input type="date" name="toDate" value="@((ViewBag.ToDate as DateTime?)?.ToString("yyyy-MM-dd", inv))"
+                       class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" />
+            </div>
+            <div>
+                <button type="submit" class="w-full bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition text-sm font-medium">
+                    <i class="fas fa-search me-1"></i> @(isRtl ? "عرض الكشف" : "View Statement")
+                </button>
+            </div>
+        </div>
+    </form>
+</div>
+
+@if (Model != null)
+{
+    <!-- Partner Header -->
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-5 mb-6">
+        <div class="flex flex-wrap items-center justify-between gap-4">
+            <div>
+                <h2 class="text-xl font-bold text-gray-800">
+                    @Model.PartnerName
+                    @if (!string.IsNullOrEmpty(Model.PartnerNameAr))
+                    {
+                        <span class="text-gray-500">- @Model.PartnerNameAr</span>
+                    }
+                </h2>
+                <p class="text-sm text-gray-500 mt-1">
+                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium @(Model.PartnerType == "Customer" ? "bg-blue-100 text-blue-700" : "bg-purple-100 text-purple-700")">
+                        <i class="fas @(Model.PartnerType == "Customer" ? "fa-user" : "fa-truck") me-1"></i>
+                        @(Model.PartnerType == "Customer" ? (isRtl ? "عميل" : "Customer") : (isRtl ? "مورد" : "Vendor"))
+                    </span>
+                    <span class="ms-3 text-gray-400">@Model.FromDate.ToString("yyyy-MM-dd", inv) → @Model.ToDate.ToString("yyyy-MM-dd", inv)</span>
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
+            <p class="text-xs text-gray-500 mb-1">@(isRtl ? "الرصيد الافتتاحي" : "Opening Balance")</p>
+            <p class="text-xl font-bold @(Model.OpeningBalance >= 0 ? "text-green-600" : "text-red-600")">@Model.OpeningBalance.ToString("N2")</p>
+        </div>
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
+            <p class="text-xs text-gray-500 mb-1">@(isRtl ? "إجمالي المدين" : "Total Debit")</p>
+            <p class="text-xl font-bold text-blue-600">@Model.TotalDebit.ToString("N2")</p>
+        </div>
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
+            <p class="text-xs text-gray-500 mb-1">@(isRtl ? "إجمالي الدائن" : "Total Credit")</p>
+            <p class="text-xl font-bold text-orange-600">@Model.TotalCredit.ToString("N2")</p>
+        </div>
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
+            <p class="text-xs text-gray-500 mb-1">@(isRtl ? "الرصيد الختامي" : "Closing Balance")</p>
+            <p class="text-xl font-bold @(Model.ClosingBalance >= 0 ? "text-green-600" : "text-red-600")">@Model.ClosingBalance.ToString("N2")</p>
+        </div>
+    </div>
+
+    <!-- Statement Table -->
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+                <thead class="bg-slate-50">
+                    <tr class="text-slate-600">
+                        <th class="px-4 py-3 text-start font-semibold">@(isRtl ? "التاريخ" : "Date")</th>
+                        <th class="px-4 py-3 text-start font-semibold">@(isRtl ? "نوع المستند" : "Doc Type")</th>
+                        <th class="px-4 py-3 text-start font-semibold">@(isRtl ? "رقم المستند" : "Doc Number")</th>
+                        <th class="px-4 py-3 text-start font-semibold">@(isRtl ? "المرجع" : "Reference")</th>
+                        <th class="px-4 py-3 text-end font-semibold">@(isRtl ? "مدين" : "Debit")</th>
+                        <th class="px-4 py-3 text-end font-semibold">@(isRtl ? "دائن" : "Credit")</th>
+                        <th class="px-4 py-3 text-end font-semibold">@(isRtl ? "الرصيد" : "Balance")</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100">
+                    <!-- Opening Balance Row -->
+                    <tr class="bg-indigo-50 font-medium">
+                        <td class="px-4 py-3 text-gray-600">@Model.FromDate.ToString("yyyy-MM-dd", inv)</td>
+                        <td class="px-4 py-3 text-indigo-700" colspan="3">
+                            <i class="fas fa-arrow-right me-1"></i> @(isRtl ? "رصيد افتتاحي" : "Opening Balance")
+                        </td>
+                        <td class="px-4 py-3 text-end font-mono">-</td>
+                        <td class="px-4 py-3 text-end font-mono">-</td>
+                        <td class="px-4 py-3 text-end font-mono font-bold @(Model.OpeningBalance >= 0 ? "text-green-700" : "text-red-700")">
+                            @Model.OpeningBalance.ToString("N2")
+                        </td>
+                    </tr>
+
+                    @foreach (var line in Model.Lines)
+                    {
+                        var iconClass = line.DocumentType.Contains("Invoice") || line.DocumentType.Contains("فاتورة بيع")
+                            ? "fa-file-invoice text-blue-500"
+                            : line.DocumentType.Contains("Bill") || line.DocumentType.Contains("شراء")
+                            ? "fa-file-invoice-dollar text-purple-500"
+                            : line.DocumentType.Contains("Receipt") || line.DocumentType.Contains("تحصيل")
+                            ? "fa-hand-holding-usd text-green-500"
+                            : line.DocumentType.Contains("Payment") || line.DocumentType.Contains("دفعة")
+                            ? "fa-money-check-alt text-orange-500"
+                            : "fa-file text-gray-500";
+                        <tr class="hover:bg-gray-50 transition">
+                            <td class="px-4 py-3 text-gray-600">@line.Date.ToString("yyyy-MM-dd", inv)</td>
+                            <td class="px-4 py-3">
+                                <span class="inline-flex items-center gap-1">
+                                    <i class="fas @iconClass"></i>
+                                    <span class="text-gray-700 text-xs">@line.DocumentType</span>
+                                </span>
+                            </td>
+                            <td class="px-4 py-3 font-medium text-blue-600">@line.DocumentNumber</td>
+                            <td class="px-4 py-3 text-gray-500 text-xs">@line.Reference</td>
+                            <td class="px-4 py-3 text-end font-mono @(line.Debit > 0 ? "text-green-700 font-medium" : "text-gray-300")">
+                                @line.Debit.ToString("N2")
+                            </td>
+                            <td class="px-4 py-3 text-end font-mono @(line.Credit > 0 ? "text-red-700 font-medium" : "text-gray-300")">
+                                @line.Credit.ToString("N2")
+                            </td>
+                            <td class="px-4 py-3 text-end font-mono font-medium @(line.RunningBalance >= 0 ? "text-green-700" : "text-red-700")">
+                                @line.RunningBalance.ToString("N2")
+                            </td>
+                        </tr>
+                    }
+
+                    <!-- Closing Balance Row -->
+                    <tr class="bg-slate-100 font-bold border-t-2 border-slate-300">
+                        <td class="px-4 py-3"></td>
+                        <td class="px-4 py-3 text-slate-700" colspan="3">
+                            <i class="fas fa-flag-checkered me-1"></i> @(isRtl ? "الرصيد الختامي" : "Closing Balance")
+                        </td>
+                        <td class="px-4 py-3 text-end font-mono text-blue-700">@Model.TotalDebit.ToString("N2")</td>
+                        <td class="px-4 py-3 text-end font-mono text-orange-700">@Model.TotalCredit.ToString("N2")</td>
+                        <td class="px-4 py-3 text-end font-mono text-lg @(Model.ClosingBalance >= 0 ? "text-green-700" : "text-red-700")">
+                            @Model.ClosingBalance.ToString("N2")
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    @if (!Model.Lines.Any())
+    {
+        <div class="bg-yellow-50 border border-yellow-200 rounded-xl p-6 text-center mt-4">
+            <i class="fas fa-inbox text-yellow-400 text-3xl mb-2"></i>
+            <p class="text-yellow-700">@(isRtl ? "لا توجد حركات في الفترة المحددة" : "No transactions found for the selected period")</p>
+        </div>
+    }
+}
+else
+{
+    <div class="bg-blue-50 border border-blue-200 rounded-xl p-8 text-center">
+        <i class="fas fa-user-tie text-blue-300 text-5xl mb-4"></i>
+        <h3 class="text-lg font-semibold text-blue-700 mb-2">@(isRtl ? "كشف حساب العملاء والموردين" : "Customer & Vendor Statement")</h3>
+        <p class="text-blue-500 text-sm">@(isRtl ? "اختر الشريك والفترة الزمنية لعرض كشف الحساب المفصل" : "Select a partner and date range to view the detailed account statement")</p>
+    </div>
+}
+
+<style>
+    @@media print {
+        .no-print { display: none !important; }
+        body { background: white; }
+        .bg-white { box-shadow: none !important; border: 1px solid #ddd !important; }
+    }
+</style>

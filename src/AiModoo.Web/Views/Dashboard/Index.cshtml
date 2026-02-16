@@ -1,0 +1,154 @@
+@{
+    ViewData["Title"] = CultureInfo.CurrentCulture.TextInfo.IsRightToLeft ? "لوحة التحكم" : "Dashboard";
+    var isRtl = CultureInfo.CurrentCulture.TextInfo.IsRightToLeft;
+}
+
+<!-- Summary Cards -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+    <!-- Sales Card -->
+    <div class="bg-white rounded-xl shadow-sm p-6 border-s-4 border-green-500">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-sm text-gray-500">@(isRtl ? "المبيعات" : "Sales")</p>
+                <p class="text-2xl font-bold text-gray-800 mt-1">0.00</p>
+                <p class="text-xs text-green-600 mt-1">
+                    <i class="fas fa-arrow-up me-1"></i>@(isRtl ? "هذا الشهر" : "This Month")
+                </p>
+            </div>
+            <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+                <i class="fas fa-chart-line text-green-600"></i>
+            </div>
+        </div>
+    </div>
+
+    <!-- Purchases Card -->
+    <div class="bg-white rounded-xl shadow-sm p-6 border-s-4 border-orange-500">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-sm text-gray-500">@(isRtl ? "المشتريات" : "Purchases")</p>
+                <p class="text-2xl font-bold text-gray-800 mt-1">0.00</p>
+                <p class="text-xs text-orange-600 mt-1">
+                    <i class="fas fa-arrow-down me-1"></i>@(isRtl ? "هذا الشهر" : "This Month")
+                </p>
+            </div>
+            <div class="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
+                <i class="fas fa-shopping-bag text-orange-600"></i>
+            </div>
+        </div>
+    </div>
+
+    <!-- Receivable Card -->
+    <div class="bg-white rounded-xl shadow-sm p-6 border-s-4 border-blue-500">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-sm text-gray-500">@(isRtl ? "ذمم مدينة" : "Receivable")</p>
+                <p class="text-2xl font-bold text-gray-800 mt-1">0.00</p>
+                <p class="text-xs text-blue-600 mt-1">@(isRtl ? "مستحقة التحصيل" : "Outstanding")</p>
+            </div>
+            <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                <i class="fas fa-hand-holding-dollar text-blue-600"></i>
+            </div>
+        </div>
+    </div>
+
+    <!-- Inventory Card -->
+    <div class="bg-white rounded-xl shadow-sm p-6 border-s-4 border-purple-500">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-sm text-gray-500">@(isRtl ? "قيمة المخزون" : "Inventory Value")</p>
+                <p class="text-2xl font-bold text-gray-800 mt-1">0.00</p>
+                <p class="text-xs text-purple-600 mt-1">@(isRtl ? "إجمالي المنتجات" : "Total Products"): 0</p>
+            </div>
+            <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
+                <i class="fas fa-boxes-stacked text-purple-600"></i>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="bg-white rounded-xl shadow-sm p-6 mb-8">
+    <h3 class="text-lg font-semibold mb-4">@(isRtl ? "إجراءات سريعة" : "Quick Actions")</h3>
+    <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
+        <a href="/Sales/Quotation/Create" class="flex flex-col items-center gap-2 p-4 rounded-lg hover:bg-blue-50 transition border border-gray-100">
+            <div class="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+                <i class="fas fa-file-invoice text-green-600"></i>
+            </div>
+            <span class="text-xs text-center">@(isRtl ? "عرض سعر جديد" : "New Quotation")</span>
+        </a>
+        <a href="/Purchases/Rfq/Create" class="flex flex-col items-center gap-2 p-4 rounded-lg hover:bg-blue-50 transition border border-gray-100">
+            <div class="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
+                <i class="fas fa-cart-plus text-orange-600"></i>
+            </div>
+            <span class="text-xs text-center">@(isRtl ? "طلب شراء" : "New Purchase")</span>
+        </a>
+        <a href="/Accounting/JournalEntry/Create" class="flex flex-col items-center gap-2 p-4 rounded-lg hover:bg-blue-50 transition border border-gray-100">
+            <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                <i class="fas fa-pen-to-square text-blue-600"></i>
+            </div>
+            <span class="text-xs text-center">@(isRtl ? "قيد يومية" : "Journal Entry")</span>
+        </a>
+        <a href="/Accounting/Payment/Create" class="flex flex-col items-center gap-2 p-4 rounded-lg hover:bg-blue-50 transition border border-gray-100">
+            <div class="w-10 h-10 bg-teal-100 rounded-lg flex items-center justify-center">
+                <i class="fas fa-money-bill-wave text-teal-600"></i>
+            </div>
+            <span class="text-xs text-center">@(isRtl ? "تسجيل دفعة" : "Register Payment")</span>
+        </a>
+        <a href="/Inventory/Product/Create" class="flex flex-col items-center gap-2 p-4 rounded-lg hover:bg-blue-50 transition border border-gray-100">
+            <div class="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
+                <i class="fas fa-box text-purple-600"></i>
+            </div>
+            <span class="text-xs text-center">@(isRtl ? "منتج جديد" : "New Product")</span>
+        </a>
+        <a href="/POS/PosSession/Terminal" class="flex flex-col items-center gap-2 p-4 rounded-lg hover:bg-blue-50 transition border border-gray-100">
+            <div class="w-10 h-10 bg-pink-100 rounded-lg flex items-center justify-center">
+                <i class="fas fa-cash-register text-pink-600"></i>
+            </div>
+            <span class="text-xs text-center">@(isRtl ? "نقطة البيع" : "Open POS")</span>
+        </a>
+    </div>
+</div>
+
+<!-- Charts Row -->
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+    <div class="bg-white rounded-xl shadow-sm p-6">
+        <h3 class="text-lg font-semibold mb-4">@(isRtl ? "المبيعات والمشتريات" : "Sales & Purchases")</h3>
+        <div class="h-64 flex items-center justify-center text-gray-400">
+            <div class="text-center">
+                <i class="fas fa-chart-bar text-4xl mb-2"></i>
+                <p class="text-sm">@(isRtl ? "سيظهر الرسم البياني هنا" : "Chart will appear here")</p>
+            </div>
+        </div>
+    </div>
+    <div class="bg-white rounded-xl shadow-sm p-6">
+        <h3 class="text-lg font-semibold mb-4">@(isRtl ? "التدفق النقدي" : "Cash Flow")</h3>
+        <div class="h-64 flex items-center justify-center text-gray-400">
+            <div class="text-center">
+                <i class="fas fa-chart-area text-4xl mb-2"></i>
+                <p class="text-sm">@(isRtl ? "سيظهر الرسم البياني هنا" : "Chart will appear here")</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- AI Insights -->
+<div class="bg-gradient-to-r from-blue-600 to-indigo-700 rounded-xl shadow-sm p-6 text-white">
+    <div class="flex items-center gap-3 mb-4">
+        <i class="fas fa-brain text-xl"></i>
+        <h3 class="text-lg font-semibold">@(isRtl ? "تحليلات الذكاء الاصطناعي" : "AI Insights")</h3>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div class="bg-white/10 rounded-lg p-4">
+            <p class="text-sm text-blue-200">@(isRtl ? "توقع المبيعات" : "Sales Forecast")</p>
+            <p class="text-lg font-bold mt-1">@(isRtl ? "سيتم تفعيله لاحقاً" : "Coming soon")</p>
+        </div>
+        <div class="bg-white/10 rounded-lg p-4">
+            <p class="text-sm text-blue-200">@(isRtl ? "تنبيهات المخزون" : "Stock Alerts")</p>
+            <p class="text-lg font-bold mt-1">@(isRtl ? "لا تنبيهات حالياً" : "No alerts")</p>
+        </div>
+        <div class="bg-white/10 rounded-lg p-4">
+            <p class="text-sm text-blue-200">@(isRtl ? "كشف الشذوذ" : "Anomaly Detection")</p>
+            <p class="text-lg font-bold mt-1">@(isRtl ? "النظام سليم" : "System healthy")</p>
+        </div>
+    </div>
+</div>

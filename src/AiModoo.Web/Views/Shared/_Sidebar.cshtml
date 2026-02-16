@@ -1,0 +1,185 @@
+@inject IViewLocalizer Localizer
+@{
+    var isRtl = CultureInfo.CurrentCulture.TextInfo.IsRightToLeft;
+    var currentArea = ViewContext.RouteData.Values["area"]?.ToString() ?? "";
+    var currentController = ViewContext.RouteData.Values["controller"]?.ToString() ?? "";
+}
+
+<aside class="w-64 bg-slate-900 text-white flex-shrink-0 overflow-y-auto" id="sidebar">
+    <!-- Logo -->
+    <div class="p-4 border-b border-slate-700">
+        <a href="/" class="flex items-center gap-3">
+            <img src="~/images/logo.png" alt="MODOO" class="w-10 h-10 rounded-lg object-cover" />
+            <div>
+                <h1 class="text-lg font-bold">MODOO</h1>
+                <p class="text-xs text-slate-400">@(isRtl ? "حلول المؤسسات" : "Enterprise Solutions")</p>
+            </div>
+        </a>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="p-3 space-y-1">
+        <!-- Dashboard -->
+        <a href="/Dashboard" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-slate-800 transition @(currentController == "Dashboard" ? "bg-slate-800 text-blue-400" : "text-slate-300")">
+            <i class="fas fa-chart-line w-5 text-center"></i>
+            <span>@(isRtl ? "لوحة التحكم" : "Dashboard")</span>
+        </a>
+
+        <!-- Accounting -->
+        <div class="pt-3">
+            <p class="px-3 text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">
+                @(isRtl ? "المالية" : "Finance")
+            </p>
+            <a href="/Accounting/Account" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-slate-800 transition @(currentArea == "Accounting" && currentController == "Account" ? "bg-slate-800 text-blue-400" : "text-slate-300")">
+                <i class="fas fa-calculator w-5 text-center"></i>
+                <span>@(isRtl ? "دليل الحسابات" : "Chart of Accounts")</span>
+            </a>
+            <a href="/Accounting/Invoice" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-slate-800 transition @(currentController == "Invoice" ? "bg-slate-800 text-blue-400" : "text-slate-300")">
+                <i class="fas fa-file-invoice w-5 text-center"></i>
+                <span>@(isRtl ? "الفواتير" : "Invoices")</span>
+            </a>
+            <a href="/Accounting/Payment" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-slate-800 transition @(currentController == "Payment" ? "bg-slate-800 text-blue-400" : "text-slate-300")">
+                <i class="fas fa-money-bill-wave w-5 text-center"></i>
+                <span>@(isRtl ? "المدفوعات" : "Payments")</span>
+            </a>
+            <a href="/Accounting/JournalEntry" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-slate-800 transition @(currentController == "JournalEntry" ? "bg-slate-800 text-blue-400" : "text-slate-300")">
+                <i class="fas fa-book w-5 text-center"></i>
+                <span>@(isRtl ? "القيود اليومية" : "Journal Entries")</span>
+            </a>
+            <a href="/Accounting/BankStatement" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-slate-800 transition @(currentController == "BankStatement" ? "bg-slate-800 text-blue-400" : "text-slate-300")">
+                <i class="fas fa-file-alt w-5 text-center"></i>
+                <span>@(isRtl ? "كشوفات البنك" : "Bank Statements")</span>
+            </a>
+            <a href="/Accounting/BankReconciliation" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-slate-800 transition @(currentController == "BankReconciliation" ? "bg-slate-800 text-blue-400" : "text-slate-300")">
+                <i class="fas fa-university w-5 text-center"></i>
+                <span>@(isRtl ? "التسوية البنكية" : "Bank Reconciliation")</span>
+            </a>
+            <a href="/Accounting/FinancialReport" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-slate-800 transition @(currentController == "FinancialReport" ? "bg-slate-800 text-blue-400" : "text-slate-300")">
+                <i class="fas fa-chart-bar w-5 text-center"></i>
+                <span>@(isRtl ? "التقارير المالية" : "Financial Reports")</span>
+            </a>
+            <a href="/Accounting/FinancialReport/PartnerStatement" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-slate-800 transition text-slate-300">
+                <i class="fas fa-user-tie w-5 text-center"></i>
+                <span>@(isRtl ? "كشف حساب شريك" : "Partner Statement")</span>
+            </a>
+            <a href="/Accounting/FinancialReport/AccountStatement" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-slate-800 transition text-slate-300">
+                <i class="fas fa-file-invoice-dollar w-5 text-center"></i>
+                <span>@(isRtl ? "كشف حساب" : "Account Statement")</span>
+            </a>
+            <a href="/Accounting/Tax" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-slate-800 transition @(currentController == "Tax" ? "bg-slate-800 text-blue-400" : "text-slate-300")">
+                <i class="fas fa-percent w-5 text-center"></i>
+                <span>@(isRtl ? "الضرائب" : "Taxes")</span>
+            </a>
+            <a href="/Accounting/FiscalPeriod" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-slate-800 transition @(currentController == "FiscalPeriod" ? "bg-slate-800 text-blue-400" : "text-slate-300")">
+                <i class="fas fa-calendar-alt w-5 text-center"></i>
+                <span>@(isRtl ? "الفترات المالية" : "Fiscal Periods")</span>
+            </a>
+        </div>
+
+        <!-- Sales -->
+        <div class="pt-3">
+            <p class="px-3 text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">
+                @(isRtl ? "المبيعات" : "Sales")
+            </p>
+            <a href="/Sales/SalesOrder" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-slate-800 transition @(currentArea == "Sales" && currentController == "SalesOrder" ? "bg-slate-800 text-green-400" : "text-slate-300")">
+                <i class="fas fa-shopping-cart w-5 text-center"></i>
+                <span>@(isRtl ? "طلبات البيع" : "Sales Orders")</span>
+            </a>
+            <a href="/Sales/Partner?type=1" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-slate-800 transition @(currentArea == "Sales" && currentController == "Partner" ? "bg-slate-800 text-green-400" : "text-slate-300")">
+                <i class="fas fa-users w-5 text-center"></i>
+                <span>@(isRtl ? "العملاء" : "Customers")</span>
+            </a>
+            <a href="/Sales/Pricelist" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-slate-800 transition @(currentArea == "Sales" && currentController == "Pricelist" ? "bg-slate-800 text-green-400" : "text-slate-300")">
+                <i class="fas fa-tags w-5 text-center"></i>
+                <span>@(isRtl ? "قوائم الأسعار" : "Pricelists")</span>
+            </a>
+        </div>
+
+        <!-- Purchases -->
+        <div class="pt-3">
+            <p class="px-3 text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">
+                @(isRtl ? "المشتريات" : "Purchases")
+            </p>
+            <a href="/Purchases/PurchaseOrder" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-slate-800 transition @(currentArea == "Purchases" && currentController == "PurchaseOrder" ? "bg-slate-800 text-orange-400" : "text-slate-300")">
+                <i class="fas fa-shopping-bag w-5 text-center"></i>
+                <span>@(isRtl ? "أوامر الشراء" : "Purchase Orders")</span>
+            </a>
+            <a href="/Sales/Partner?type=2" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-slate-800 transition text-slate-300">
+                <i class="fas fa-truck w-5 text-center"></i>
+                <span>@(isRtl ? "الموردين" : "Vendors")</span>
+            </a>
+        </div>
+
+        <!-- Inventory -->
+        <div class="pt-3">
+            <p class="px-3 text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">
+                @(isRtl ? "المخزون" : "Inventory")
+            </p>
+            <a href="/Inventory/Product" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-slate-800 transition @(currentArea == "Inventory" && currentController == "Product" ? "bg-slate-800 text-purple-400" : "text-slate-300")">
+                <i class="fas fa-box w-5 text-center"></i>
+                <span>@(isRtl ? "المنتجات" : "Products")</span>
+            </a>
+            <a href="/Inventory/Warehouse" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-slate-800 transition @(currentController == "Warehouse" ? "bg-slate-800 text-purple-400" : "text-slate-300")">
+                <i class="fas fa-warehouse w-5 text-center"></i>
+                <span>@(isRtl ? "المستودعات" : "Warehouses")</span>
+            </a>
+            <a href="/Inventory/StockPicking?type=1" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-slate-800 transition @(currentController == "StockPicking" ? "bg-slate-800 text-purple-400" : "text-slate-300")">
+                <i class="fas fa-dolly w-5 text-center"></i>
+                <span>@(isRtl ? "عمليات المخزون" : "Stock Operations")</span>
+            </a>
+            <a href="/Inventory/InventoryAdjustment" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-slate-800 transition @(currentController == "InventoryAdjustment" ? "bg-slate-800 text-purple-400" : "text-slate-300")">
+                <i class="fas fa-clipboard-check w-5 text-center"></i>
+                <span>@(isRtl ? "تسويات الجرد" : "Adjustments")</span>
+            </a>
+            <a href="/Inventory/Product/StockReport" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-slate-800 transition text-slate-300">
+                <i class="fas fa-chart-pie w-5 text-center"></i>
+                <span>@(isRtl ? "تقرير المخزون" : "Stock Report")</span>
+            </a>
+        </div>
+
+        <!-- POS -->
+        <div class="pt-3">
+            <p class="px-3 text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">
+                @(isRtl ? "نقاط البيع" : "Point of Sale")
+            </p>
+            <a href="/POS/PosSession" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-slate-800 transition @(currentArea == "POS" && currentController == "PosSession" ? "bg-slate-800 text-teal-400" : "text-slate-300")">
+                <i class="fas fa-cash-register w-5 text-center"></i>
+                <span>@(isRtl ? "الجلسات" : "Sessions")</span>
+            </a>
+            <a href="/POS/PosSession/Open" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-slate-800 transition text-slate-300">
+                <i class="fas fa-play w-5 text-center"></i>
+                <span>@(isRtl ? "فتح نقطة بيع" : "Open POS")</span>
+            </a>
+        </div>
+
+        <!-- HR -->
+        <div class="pt-3">
+            <p class="px-3 text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">
+                @(isRtl ? "الموارد البشرية" : "Human Resources")
+            </p>
+            <a href="/HR/Employee" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-slate-800 transition @(currentArea == "HR" ? "bg-slate-800 text-pink-400" : "text-slate-300")">
+                <i class="fas fa-users w-5 text-center"></i>
+                <span>@(isRtl ? "الموارد البشرية" : "HR")</span>
+            </a>
+        </div>
+
+        <!-- AI -->
+        <div class="pt-3">
+            <p class="px-3 text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">
+                @(isRtl ? "الذكاء الاصطناعي" : "AI")
+            </p>
+            <a href="/AI/DashboardAi" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-slate-800 transition @(currentArea == "AI" ? "bg-slate-800 text-yellow-400" : "text-slate-300")">
+                <i class="fas fa-brain w-5 text-center"></i>
+                <span>@(isRtl ? "الذكاء الاصطناعي" : "AI Assistant")</span>
+            </a>
+        </div>
+
+        <!-- Settings -->
+        <div class="pt-6 border-t border-slate-700 mt-3">
+            <a href="/Settings" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-slate-800 transition text-slate-300">
+                <i class="fas fa-cog w-5 text-center"></i>
+                <span>@(isRtl ? "الإعدادات" : "Settings")</span>
+            </a>
+        </div>
+    </nav>
+</aside>

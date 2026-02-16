@@ -1,0 +1,151 @@
+@model Partner
+@{
+    ViewData["Title"] = Model.PartnerType == PartnerType.Vendor ? "New Vendor" : "New Customer";
+    var isRtl = CultureInfo.CurrentCulture.TextInfo.IsRightToLeft;
+}
+
+<div class="space-y-6">
+    <div class="flex items-center gap-4">
+        <a href="/Sales/Partner" class="text-slate-400 hover:text-slate-600"><i class="fas fa-arrow-@(isRtl ? "right" : "left") text-lg"></i></a>
+        <h1 class="text-2xl font-bold text-slate-800">
+            @(Model.PartnerType == PartnerType.Vendor ? (isRtl ? "مورد جديد" : "New Vendor") : (isRtl ? "عميل جديد" : "New Customer"))
+        </h1>
+    </div>
+
+    @if (!ViewData.ModelState.IsValid)
+    {
+        <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+            @foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+            {
+                <p>@error.ErrorMessage</p>
+            }
+        </div>
+    }
+
+    <form method="post" asp-action="Create">
+        <input type="hidden" asp-for="PartnerType" />
+
+        <div class="bg-white rounded-xl shadow-sm border p-6 space-y-6">
+            <!-- Basic Info -->
+            <h2 class="text-lg font-semibold text-slate-700 border-b pb-2">@(isRtl ? "المعلومات الأساسية" : "Basic Information")</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">@(isRtl ? "الاسم (إنجليزي)" : "Name (English)") *</label>
+                    <input type="text" asp-for="Name" required class="w-full border rounded-lg px-3 py-2 text-sm" />
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">@(isRtl ? "الاسم (عربي)" : "Name (Arabic)")</label>
+                    <input type="text" asp-for="NameAr" class="w-full border rounded-lg px-3 py-2 text-sm" dir="rtl" />
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">@(isRtl ? "شركة" : "Company")</label>
+                    <select asp-for="IsCompany" class="w-full border rounded-lg px-3 py-2 text-sm">
+                        <option value="true">@(isRtl ? "شركة" : "Company")</option>
+                        <option value="false">@(isRtl ? "فرد" : "Individual")</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Contact -->
+            <h2 class="text-lg font-semibold text-slate-700 border-b pb-2">@(isRtl ? "التواصل" : "Contact")</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">@(isRtl ? "البريد الإلكتروني" : "Email")</label>
+                    <input type="email" asp-for="Email" class="w-full border rounded-lg px-3 py-2 text-sm" />
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">@(isRtl ? "الهاتف" : "Phone")</label>
+                    <input type="text" asp-for="Phone" class="w-full border rounded-lg px-3 py-2 text-sm" />
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">@(isRtl ? "الجوال" : "Mobile")</label>
+                    <input type="text" asp-for="Mobile" class="w-full border rounded-lg px-3 py-2 text-sm" />
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">@(isRtl ? "الموقع" : "Website")</label>
+                    <input type="url" asp-for="Website" class="w-full border rounded-lg px-3 py-2 text-sm" />
+                </div>
+            </div>
+
+            <!-- Address -->
+            <h2 class="text-lg font-semibold text-slate-700 border-b pb-2">@(isRtl ? "العنوان" : "Address")</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="md:col-span-2">
+                    <label class="block text-sm font-medium text-slate-700 mb-1">@(isRtl ? "الشارع" : "Street")</label>
+                    <input type="text" asp-for="Street" class="w-full border rounded-lg px-3 py-2 text-sm" />
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">@(isRtl ? "المدينة" : "City")</label>
+                    <input type="text" asp-for="City" class="w-full border rounded-lg px-3 py-2 text-sm" />
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">@(isRtl ? "المنطقة" : "State")</label>
+                    <input type="text" asp-for="State" class="w-full border rounded-lg px-3 py-2 text-sm" />
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">@(isRtl ? "الدولة" : "Country")</label>
+                    <input type="text" asp-for="Country" class="w-full border rounded-lg px-3 py-2 text-sm" />
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">@(isRtl ? "الرمز البريدي" : "Zip Code")</label>
+                    <input type="text" asp-for="ZipCode" class="w-full border rounded-lg px-3 py-2 text-sm" />
+                </div>
+            </div>
+
+            <!-- Tax & Commercial -->
+            <h2 class="text-lg font-semibold text-slate-700 border-b pb-2">@(isRtl ? "ضريبة وسجل" : "Tax & Registration")</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">@(isRtl ? "الرقم الضريبي" : "Tax Number")</label>
+                    <input type="text" asp-for="TaxNumber" class="w-full border rounded-lg px-3 py-2 text-sm" />
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">@(isRtl ? "السجل التجاري" : "Commercial Register")</label>
+                    <input type="text" asp-for="CommercialRegister" class="w-full border rounded-lg px-3 py-2 text-sm" />
+                </div>
+            </div>
+
+            <!-- Accounting & Sales -->
+            <h2 class="text-lg font-semibold text-slate-700 border-b pb-2">@(isRtl ? "المحاسبة والمبيعات" : "Accounting & Sales")</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">@(isRtl ? "شروط الدفع" : "Payment Term")</label>
+                    <select asp-for="PaymentTermId" class="w-full border rounded-lg px-3 py-2 text-sm">
+                        <option value="">@(isRtl ? "-- اختر --" : "-- Select --")</option>
+                        @foreach (SelectListItem item in (ViewBag.PaymentTerms as SelectList)!)
+                        {
+                            <option value="@item.Value">@item.Text</option>
+                        }
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">@(isRtl ? "قائمة الأسعار" : "Pricelist")</label>
+                    <select asp-for="PricelistId" class="w-full border rounded-lg px-3 py-2 text-sm">
+                        <option value="">@(isRtl ? "-- اختر --" : "-- Select --")</option>
+                        @foreach (SelectListItem item in (ViewBag.Pricelists as SelectList)!)
+                        {
+                            <option value="@item.Value">@item.Text</option>
+                        }
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">@(isRtl ? "حد الائتمان" : "Credit Limit")</label>
+                    <input type="number" asp-for="CreditLimit" step="0.01" class="w-full border rounded-lg px-3 py-2 text-sm" />
+                </div>
+            </div>
+
+            <!-- Notes -->
+            <div>
+                <label class="block text-sm font-medium text-slate-700 mb-1">@(isRtl ? "ملاحظات" : "Notes")</label>
+                <textarea asp-for="Notes" rows="3" class="w-full border rounded-lg px-3 py-2 text-sm"></textarea>
+            </div>
+        </div>
+
+        <div class="flex justify-end gap-3 mt-6">
+            <a href="/Sales/Partner" class="px-4 py-2 border rounded-lg hover:bg-slate-50">@(isRtl ? "إلغاء" : "Cancel")</a>
+            <button type="submit" class="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg">
+                <i class="fas fa-save"></i> @(isRtl ? "حفظ" : "Save")
+            </button>
+        </div>
+    </form>
+</div>

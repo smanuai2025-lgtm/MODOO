@@ -1,0 +1,91 @@
+@{
+    ViewData["Title"] = "التقارير المالية | Financial Reports";
+    var isRtl = System.Globalization.CultureInfo.CurrentCulture.Name.StartsWith("ar");
+}
+
+<div class="mb-6">
+    <h1 class="text-2xl font-bold text-gray-800">@(isRtl ? "التقارير المالية" : "Financial Reports")</h1>
+    <p class="text-gray-500 mt-1">@(isRtl ? "عرض وتحليل البيانات المالية" : "View and analyze financial data")</p>
+</div>
+
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    <a asp-action="TrialBalance" class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition group">
+        <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-4 group-hover:bg-blue-200 transition">
+            <i class="fas fa-balance-scale text-blue-600 text-xl"></i>
+        </div>
+        <h3 class="font-semibold text-gray-800 mb-1">@(isRtl ? "ميزان المراجعة" : "Trial Balance")</h3>
+        <p class="text-sm text-gray-500">@(isRtl ? "ملخص أرصدة جميع الحسابات" : "Summary of all account balances")</p>
+    </a>
+
+    <a asp-action="IncomeStatement" class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition group">
+        <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mb-4 group-hover:bg-green-200 transition">
+            <i class="fas fa-chart-line text-green-600 text-xl"></i>
+        </div>
+        <h3 class="font-semibold text-gray-800 mb-1">@(isRtl ? "قائمة الدخل" : "Income Statement")</h3>
+        <p class="text-sm text-gray-500">@(isRtl ? "الإيرادات والمصروفات وصافي الربح" : "Revenue, expenses and net profit")</p>
+    </a>
+
+    <a asp-action="BalanceSheet" class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition group">
+        <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mb-4 group-hover:bg-purple-200 transition">
+            <i class="fas fa-file-invoice-dollar text-purple-600 text-xl"></i>
+        </div>
+        <h3 class="font-semibold text-gray-800 mb-1">@(isRtl ? "الميزانية العمومية" : "Balance Sheet")</h3>
+        <p class="text-sm text-gray-500">@(isRtl ? "الأصول والالتزامات وحقوق الملكية" : "Assets, liabilities and equity")</p>
+    </a>
+
+    <a asp-action="GeneralLedger" class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition group">
+        <div class="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center mb-4 group-hover:bg-orange-200 transition">
+            <i class="fas fa-book text-orange-600 text-xl"></i>
+        </div>
+        <h3 class="font-semibold text-gray-800 mb-1">@(isRtl ? "دفتر الأستاذ" : "General Ledger")</h3>
+        <p class="text-sm text-gray-500">@(isRtl ? "تفاصيل حركات الحسابات" : "Detailed account movements")</p>
+    </a>
+
+    <a asp-action="AgedReceivable" class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition group">
+        <div class="w-12 h-12 bg-teal-100 rounded-lg flex items-center justify-center mb-4 group-hover:bg-teal-200 transition">
+            <i class="fas fa-hand-holding-usd text-teal-600 text-xl"></i>
+        </div>
+        <h3 class="font-semibold text-gray-800 mb-1">@(isRtl ? "أعمار الذمم المدينة" : "Aged Receivable")</h3>
+        <p class="text-sm text-gray-500">@(isRtl ? "تحليل المبالغ المستحقة" : "Analysis of amounts due")</p>
+    </a>
+
+    <a asp-action="AgedPayable" class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition group">
+        <div class="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center mb-4 group-hover:bg-red-200 transition">
+            <i class="fas fa-file-invoice text-red-600 text-xl"></i>
+        </div>
+        <h3 class="font-semibold text-gray-800 mb-1">@(isRtl ? "أعمار الذمم الدائنة" : "Aged Payable")</h3>
+        <p class="text-sm text-gray-500">@(isRtl ? "تحليل المبالغ المستحقة للموردين" : "Analysis of amounts owed to vendors")</p>
+    </a>
+</div>
+
+<!-- Statements Section -->
+<div class="mt-8 mb-6">
+    <h2 class="text-xl font-bold text-gray-800">@(isRtl ? "كشوفات الحسابات" : "Account Statements")</h2>
+    <p class="text-gray-500 mt-1">@(isRtl ? "كشف حساب مفصل للشركاء والحسابات" : "Detailed statements for partners and accounts")</p>
+</div>
+
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    <a asp-action="PartnerStatement" class="bg-white rounded-xl shadow-sm border border-indigo-200 p-6 hover:shadow-md hover:border-indigo-400 transition group">
+        <div class="w-12 h-12 bg-indigo-100 rounded-lg flex items-center justify-center mb-4 group-hover:bg-indigo-200 transition">
+            <i class="fas fa-user-tie text-indigo-600 text-xl"></i>
+        </div>
+        <h3 class="font-semibold text-gray-800 mb-1">@(isRtl ? "كشف حساب عميل / مورد" : "Partner Statement")</h3>
+        <p class="text-sm text-gray-500">@(isRtl ? "كشف حساب مفصل يشمل الفواتير والمدفوعات مع الرصيد المتحرك" : "Detailed statement with invoices, payments and running balance")</p>
+    </a>
+
+    <a asp-action="AccountStatement" class="bg-white rounded-xl shadow-sm border border-teal-200 p-6 hover:shadow-md hover:border-teal-400 transition group">
+        <div class="w-12 h-12 bg-teal-100 rounded-lg flex items-center justify-center mb-4 group-hover:bg-teal-200 transition">
+            <i class="fas fa-file-invoice-dollar text-teal-600 text-xl"></i>
+        </div>
+        <h3 class="font-semibold text-gray-800 mb-1">@(isRtl ? "كشف حساب من دليل الحسابات" : "Account Statement")</h3>
+        <p class="text-sm text-gray-500">@(isRtl ? "كشف مفصل لأي حساب في دليل الحسابات مع جميع القيود" : "Detailed statement for any account with all journal entries")</p>
+    </a>
+
+    <a asp-action="TaxReport" class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition group">
+        <div class="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center mb-4 group-hover:bg-yellow-200 transition">
+            <i class="fas fa-receipt text-yellow-600 text-xl"></i>
+        </div>
+        <h3 class="font-semibold text-gray-800 mb-1">@(isRtl ? "تقرير الضريبة" : "Tax Report")</h3>
+        <p class="text-sm text-gray-500">@(isRtl ? "ملخص الضرائب المحصلة والمدفوعة" : "Summary of collected and paid taxes")</p>
+    </a>
+</div>

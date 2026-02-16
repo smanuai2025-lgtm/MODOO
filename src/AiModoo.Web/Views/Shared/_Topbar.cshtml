@@ -1,0 +1,74 @@
+@inject IViewLocalizer Localizer
+@{
+    var isRtl = CultureInfo.CurrentCulture.TextInfo.IsRightToLeft;
+    var currentLang = CultureInfo.CurrentCulture.TwoLetterISOLanguageName;
+}
+
+<header class="bg-white border-b border-gray-200 px-6 py-3 flex items-center justify-between">
+    <!-- Left: Page Title -->
+    <div class="flex items-center gap-3">
+        <button onclick="document.getElementById('sidebar').classList.toggle('hidden')" class="lg:hidden text-gray-500 hover:text-gray-700">
+            <i class="fas fa-bars text-lg"></i>
+        </button>
+        <h2 class="text-lg font-semibold text-gray-800">@ViewData["Title"]</h2>
+    </div>
+
+    <!-- Right: Actions -->
+    <div class="flex items-center gap-4">
+        <!-- Search -->
+        <div class="relative hidden md:block">
+            <input type="text" placeholder="@(isRtl ? "بحث..." : "Search...")"
+                   class="w-64 px-4 py-2 ps-10 bg-gray-100 border-0 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:bg-white" />
+            <i class="fas fa-search absolute start-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+        </div>
+
+        <!-- Language Switcher -->
+        <div class="relative" id="langDropdown">
+            <button onclick="document.getElementById('langMenu').classList.toggle('hidden')"
+                    class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-100 transition text-sm">
+                <i class="fas fa-globe"></i>
+                <span>@(currentLang == "ar" ? "العربية" : "English")</span>
+            </button>
+            <div id="langMenu" class="hidden absolute end-0 mt-2 w-40 bg-white rounded-lg shadow-lg border border-gray-200 z-50">
+                <a href="/Localization/SetLanguage?culture=ar-SA&returnUrl=@Context.Request.Path"
+                   class="block px-4 py-2 text-sm hover:bg-gray-50 @(currentLang == "ar" ? "text-blue-600 font-semibold" : "text-gray-700")">
+                    العربية
+                </a>
+                <a href="/Localization/SetLanguage?culture=en-US&returnUrl=@Context.Request.Path"
+                   class="block px-4 py-2 text-sm hover:bg-gray-50 @(currentLang == "en" ? "text-blue-600 font-semibold" : "text-gray-700")">
+                    English
+                </a>
+            </div>
+        </div>
+
+        <!-- Notifications -->
+        <button class="relative p-2 rounded-lg hover:bg-gray-100 transition">
+            <i class="fas fa-bell text-gray-500"></i>
+            <span class="absolute top-1 end-1 w-2 h-2 bg-red-500 rounded-full"></span>
+        </button>
+
+        <!-- User Menu -->
+        <div class="relative" id="userDropdown">
+            <button onclick="document.getElementById('userMenu').classList.toggle('hidden')"
+                    class="flex items-center gap-2 ps-3 pe-2 py-1.5 rounded-lg hover:bg-gray-100 transition">
+                <div class="text-end hidden sm:block">
+                    <p class="text-sm font-medium text-gray-700">@(User.Identity?.Name ?? (isRtl ? "زائر" : "Guest"))</p>
+                </div>
+                <div class="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
+                    <i class="fas fa-user text-white text-xs"></i>
+                </div>
+            </button>
+            <div id="userMenu" class="hidden absolute end-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-50">
+                <a href="/AccountManagement/Profile" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
+                    <i class="fas fa-user-circle me-2"></i>@(isRtl ? "الملف الشخصي" : "Profile")
+                </a>
+                <hr class="border-gray-100" />
+                <form asp-controller="AccountManagement" asp-action="Logout" method="post">
+                    <button type="submit" class="w-full text-start px-4 py-2 text-sm text-red-600 hover:bg-red-50">
+                        <i class="fas fa-sign-out-alt me-2"></i>@(isRtl ? "تسجيل الخروج" : "Logout")
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</header>
