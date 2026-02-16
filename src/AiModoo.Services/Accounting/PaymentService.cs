@@ -54,7 +54,8 @@ public class PaymentService : IPaymentService
         _ = await _journalRepository.GetByIdAsync(payment.JournalId, ct)
             ?? throw new NotFoundException(nameof(Journal), payment.JournalId);
 
-        payment.Number = $"PAY-{DateTime.Now:yyyy-MMdd}-{new Random().Next(1000, 9999)}";
+        var count = await _repository.CountAsync(ct);
+        payment.Number = $"PAY-{DateTime.UtcNow:yyyyMMdd}-{(count + 1):D5}";
         payment.Status = PaymentStatus.Draft;
 
         await _repository.AddAsync(payment, ct);
