@@ -19,19 +19,22 @@ public class PosSessionController : Controller
     private readonly ICurrentUserService _currentUserService;
     private readonly IAccountingIntegrationService _accountingIntegration;
     private readonly IRepository<Core.Entities.Accounting.PaymentMethod> _paymentMethodRepository;
+    private readonly ILogger<PosSessionController> _logger;
 
     public PosSessionController(
         IPosService posService,
         IProductService productService,
         ICurrentUserService currentUserService,
         IAccountingIntegrationService accountingIntegration,
-        IRepository<Core.Entities.Accounting.PaymentMethod> paymentMethodRepository)
+        IRepository<Core.Entities.Accounting.PaymentMethod> paymentMethodRepository,
+        ILogger<PosSessionController> logger)
     {
         _posService = posService;
         _productService = productService;
         _currentUserService = currentUserService;
         _accountingIntegration = accountingIntegration;
         _paymentMethodRepository = paymentMethodRepository;
+        _logger = logger;
     }
 
     // GET: /POS/PosSession
@@ -156,9 +159,9 @@ public class PosSessionController : Controller
             {
                 await _accountingIntegration.PostPosSessionAsync(sessionId);
             }
-            catch
+            catch (Exception ex)
             {
-                // Accounting posting is optional - session still closes
+                _logger.LogWarning(ex, "Failed to post accounting entries for POS session {SessionId}", sessionId);
             }
 
             TempData["Success"] = "تم إغلاق الجلسة بنجاح | Session closed successfully.";

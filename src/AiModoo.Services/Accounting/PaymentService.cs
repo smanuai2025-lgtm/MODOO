@@ -51,10 +51,15 @@ public class PaymentService : IPaymentService
 
     public async Task<Payment> CreateAsync(Payment payment, CancellationToken ct = default)
     {
-        _ = await _journalRepository.GetByIdAsync(payment.JournalId, ct)
+        var journal = await _journalRepository.GetByIdAsync(payment.JournalId, ct)
             ?? throw new NotFoundException(nameof(Journal), payment.JournalId);
 
-        payment.Number = $"PAY-{DateTime.Now:yyyy-MMdd}-{new Random().Next(1000, 9999)}";
+        var prefix = journal.SequencePrefix ?? journal.Code;
+        var number = journal.NextSequenceNumber;
+        journal.NextSequenceNumber++;
+        _journalRepository.Update(journal);
+
+        payment.Number = $"PAY-{prefix}-{DateTime.UtcNow.Year}-{number:D5}";
         payment.Status = PaymentStatus.Draft;
 
         await _repository.AddAsync(payment, ct);
